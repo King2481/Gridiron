@@ -10,6 +10,8 @@
 #include "Gridiron/Abilities/GridironGameplayAbility.h"
 #include "Gridiron/Items/ItemBase.h"
 #include "Gridiron/Items/ItemEquipable.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Camera/CameraComponent.h"
 
 // Sets default values
 AGridironCharacter::AGridironCharacter(const FObjectInitializer& ObjectInitializer)
@@ -35,6 +37,22 @@ AGridironCharacter::AGridironCharacter(const FObjectInitializer& ObjectInitializ
 	bIsDying = false;
 	CurrentEquipable = nullptr;
 	DefaultWeapon = nullptr;
+
+	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
+	CameraComponent->SetupAttachment(RootComponent);
+	CameraComponent->bUsePawnControlRotation = true;
+
+	ArmMesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("ArmMesh1P"));
+	ArmMesh1P->SetupAttachment(CameraComponent);
+	ArmMesh1P->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
+	ArmMesh1P->CastShadow = false;
+	ArmMesh1P->bOnlyOwnerSee = true;
+
+	WeaponMesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh1P"));
+	WeaponMesh1P->SetupAttachment(ArmMesh1P);
+	WeaponMesh1P->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
+	WeaponMesh1P->CastShadow = false;
+	WeaponMesh1P->bOnlyOwnerSee = true;
 }
 
 // Called when the game starts or when spawned

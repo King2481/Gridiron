@@ -11,6 +11,7 @@ class UGridironGameplayAbility;
 class UGridironMovementComponent;
 class AItemBase;
 class AItemEquipable;
+class UCameraComponent;
 
 UCLASS()
 class GRIDIRON_API AGridironCharacter : public ACharacter
@@ -170,6 +171,18 @@ protected:
 	// The default weapon this character starts with.
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Character")
 	TSubclassOf<AItemEquipable> DefaultWeapon;
+
+	// The Camera for this character
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
+	UCameraComponent* CameraComponent;
+
+	/** First person character mesh */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh")
+	USkeletalMeshComponent* ArmMesh1P;
+
+	/** Weapon mesh */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh")
+	USkeletalMeshComponent* WeaponMesh1P;
 
 public:	
 
