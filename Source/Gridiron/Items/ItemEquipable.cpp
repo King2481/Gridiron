@@ -12,6 +12,8 @@ AItemEquipable::AItemEquipable()
 	SimulatedEquipableState = EEquipableState::Unequipped;
 
 	SwapToTime = 1.5f;
+	FireAbility = nullptr;
+	AltFireAbility = nullptr;
 }
 
 void AItemEquipable::InitItem(AGridironCharacter* NewOwner)
@@ -32,6 +34,8 @@ void AItemEquipable::Equip()
 {
 	if (PawnOwner)
 	{
+		PawnOwner->GiveCharacterAbility(FireAbility);
+		PawnOwner->GiveCharacterAbility(AltFireAbility);
 		// PawnOwner->SetupFirstPersonWeaponMesh(Mesh1PAsset);
 		// PawnOwner->PlayAnimationMontages(EquipAnimationPair.FirstPersonAnim, EquipAnimationPair.ThirdPersonAnim);
 	}
@@ -48,6 +52,12 @@ void AItemEquipable::OnSwapToFinished()
 
 void AItemEquipable::Unequip()
 {
+	if (PawnOwner)
+	{
+		PawnOwner->RemoveCharacterAbility(FireAbility);
+		PawnOwner->RemoveCharacterAbility(AltFireAbility);
+	}
+
 	SetEquipableState(EEquipableState::Unequipped);
 }
 

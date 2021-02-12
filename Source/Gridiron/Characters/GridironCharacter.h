@@ -81,6 +81,14 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Character")
 	bool AllowWeaponSwapping() const;
 
+	// Grants a gameplay ability
+	UFUNCTION(BlueprintCallable, Category = "Character")
+	void GiveCharacterAbility(TSubclassOf<UGridironGameplayAbility> Ability);
+
+	// Removes a gameplay ability
+	UFUNCTION(BlueprintCallable, Category = "Character")
+	void RemoveCharacterAbility(TSubclassOf<UGridironGameplayAbility> Ability);
+
 protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities")
@@ -188,9 +196,9 @@ protected:
 	UFUNCTION()
 	void OnRep_Inventory();
 
-	// The default weapon this character starts with.
+	// The default weapons this character starts with.
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Character")
-	TSubclassOf<AItemEquipable> DefaultWeapon;
+	TArray<TSubclassOf<AItemEquipable>> DefaultWeapons;
 
 	// The Camera for this character
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")

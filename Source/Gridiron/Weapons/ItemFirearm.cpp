@@ -67,6 +67,21 @@ void AItemFirearm::Tick(float DeltaTime)
 	}
 }
 
+void AItemFirearm::OnTriggerPressed()
+{
+	bHoldingTrigger = true;
+
+	if (AllowFire())
+	{
+		FireWeapon();
+	}
+}
+
+void AItemFirearm::OnTriggerReleased()
+{
+	bHoldingTrigger = false;
+}
+
 void AItemFirearm::OnEquipped()
 {
 	Super::OnEquipped();

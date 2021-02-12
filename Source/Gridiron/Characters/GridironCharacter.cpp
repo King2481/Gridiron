@@ -36,7 +36,6 @@ AGridironCharacter::AGridironCharacter(const FObjectInitializer& ObjectInitializ
 	StartingArmor = 0.f;
 	bIsDying = false;
 	CurrentEquipable = nullptr;
-	DefaultWeapon = nullptr;
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	CameraComponent->SetupAttachment(RootComponent);
@@ -76,18 +75,22 @@ void AGridironCharacter::InitCharacter()
 	Health = StartingHealth;
 	Armor = StartingArmor;
 
-	if (DefaultWeapon)
+	if (DefaultWeapons.Num() > 0)
 	{
-		AddItemToInventory(DefaultWeapon);
-		EquipFirstAvailableInventoryItem();
+		for (auto& Weapon : DefaultWeapons)
+		{
+			if (Weapon)
+			{
+				AddItemToInventory(Weapon);
+			}
+		}
 	}
+
+	EquipFirstAvailableInventoryItem();
 
 	for (auto& Ability : StartingAbilities)
 	{
-		if (Ability)
-		{
-			AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(Ability, 0, static_cast<int32>(Ability.GetDefaultObject()->InputID), this));
-		}
+		GiveCharacterAbility(Ability);
 	}
 }
 
@@ -430,6 +433,40 @@ FVector AGridironCharacter::GetCameraLocation() const
 bool AGridironCharacter::AllowWeaponSwapping() const
 {
 	return true;
+}
+
+void AGridironCharacter::GiveCharacterAbility(TSubclassOf<UGridironGameplayAbility> Ability)
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	if (Ability)
+	{
+		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(Ability, 0, static_cast<int32>(Ability.GetDefaultObject()->InputID), this));
+	}
+}
+
+void AGridironCharacter::RemoveCharacterAbility(TSubclassOf<UGridironGameplayAbility> Ability)
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	if (Ability)
+	{
+		// Check to see if there is a faster way to do this rather than iterating through the entire array.
+		for (const FGameplayAbilitySpec& Spec : AbilitySystemComponent->GetActivatableAbilities())
+		{
+			if (Spec.Ability->GetClass() == Ability)
+			{
+				AbilitySystemComponent->ClearAbility(FGameplayAbilitySpecHandle(Spec.Handle));
+				break;
+			}
+		}
+	}
 }
 
 // Called to bind functionality to input

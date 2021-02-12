@@ -140,6 +140,14 @@ public:
 	// Are we allowed to "fire" this weapon?
 	virtual bool AllowFire() const override;
 
+	// Called when we press the trigger
+	UFUNCTION(BlueprintCallable, Category = "Firearm")
+	void OnTriggerPressed();
+
+	// Called when we release the trigger
+	UFUNCTION(BlueprintCallable, Category = "Firearm")
+	void OnTriggerReleased();
+
 	// Will attempt to fire this weapon.
 	UFUNCTION(BlueprintCallable, Category = "Firearm")
 	void FireWeapon();

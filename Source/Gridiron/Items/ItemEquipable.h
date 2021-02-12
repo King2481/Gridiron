@@ -8,6 +8,7 @@
 #include "ItemEquipable.generated.h"
 
 class AGridironCharacter;
+class UGridironGameplayAbility;
 
 UENUM(BlueprintType)
 enum class EEquipableState : uint8
@@ -86,7 +87,7 @@ protected:
 	EEquipableState EquipableState;
 
 	// The simulated equipable state of the item (clients)
-	UPROPERTY(BlueprintReadOnly, Category = "Item")
+	UPROPERTY(BlueprintReadOnly, Category = "Equipable")
 	EEquipableState SimulatedEquipableState;
 
 	UFUNCTION()
@@ -114,5 +115,13 @@ protected:
 	// The equip to (ie: switching to) animation pair for this item.
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Animation")
 	FAnimationPair EquipAnimationPair;
+
+	// What ability is trigged when the fire button is pressed?
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Abilities")
+	TSubclassOf<UGridironGameplayAbility> FireAbility;
+
+	// What ability is trigged when the alt fire button is pressed?
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Abilities")
+	TSubclassOf<UGridironGameplayAbility> AltFireAbility;
 	
 };
