@@ -1,27 +1,65 @@
 // Created by Bruce Crum
 
-
 #include "Gridiron/Items/ItemBase.h"
+#include "Net/UnrealNetwork.h"
+#include "Gridiron/Characters/GridironCharacter.h"
+#include "Components/SkeletalMeshComponent.h"
 
 // Sets default values
 AItemBase::AItemBase()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = false;
+
+	bReplicates = true;
+	bNetUseOwnerRelevancy = true;
+
+	Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh3P"));
+	Mesh3P->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
+	Mesh3P->CastShadow = true;
+	Mesh3P->bOnlyOwnerSee = false;
+	Mesh3P->bOwnerNoSee = true;
+
+	SetRootComponent(Mesh3P);
+
+	ItemName = FText::GetEmpty();
+}
+
+void AItemBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AItemBase, PawnOwner);
+}
+
+void AItemBase::InitItem(AGridironCharacter* NewOwner)
+{
+	SetPawnOwner(NewOwner);
+}
+
+void AItemBase::SetPawnOwner(AGridironCharacter* NewOwner)
+{
+	PawnOwner = NewOwner;
+	SetOwner(NewOwner);
+}
+
+AGridironCharacter* AItemBase::GetPawnOwner() const
+{
+	return PawnOwner;
+}
+
+void AItemBase::OnRep_PawnOwner()
+{
 
 }
 
-// Called when the game starts or when spawned
-void AItemBase::BeginPlay()
+bool AItemBase::IsPawnOwnerLocallyControlled() const
 {
-	Super::BeginPlay();
-	
+	return PawnOwner && PawnOwner->IsLocallyControlled();
 }
 
-// Called every frame
-void AItemBase::Tick(float DeltaTime)
+USkeletalMeshComponent* AItemBase::GetMesh3P() const
 {
-	Super::Tick(DeltaTime);
-
+	return Mesh3P;
 }
 

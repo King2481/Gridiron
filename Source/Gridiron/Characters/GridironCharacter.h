@@ -6,6 +6,12 @@
 #include "GameFramework/Character.h"
 #include "GridironCharacter.generated.h"
 
+class UAbilitySystemComponent;
+class UGridironGameplayAbility;
+class UGridironMovementComponent;
+class AItemBase;
+class AItemEquipable;
+
 UCLASS()
 class GRIDIRON_API AGridironCharacter : public ACharacter
 {
@@ -14,7 +20,7 @@ class GRIDIRON_API AGridironCharacter : public ACharacter
 public:
 
 	// Sets default values for this character's properties
-	AGridironCharacter();
+	AGridironCharacter(const FObjectInitializer& ObjectInitializer);
 
 	// Are we currently at or beyond our maximum health?
 	UFUNCTION(BlueprintPure, Category = "Character")
@@ -32,10 +38,42 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Character")
 	void AddArmor(const float Amount);
 
+	// Adds an item to our inventory
+	UFUNCTION(BlueprintCallable, Category = "Character")
+	void AddItemToInventory(TSubclassOf<AItemBase> ItemToAdd);
+
+	// Checks to see if an item class exists in our iventory
+	UFUNCTION(BlueprintPure, Category = "Character")
+	bool HasItemInInventory(TSubclassOf<AItemBase> ItemToFind) const;
+
+	// Attempts to equip the first available inventory item.
+	void EquipFirstAvailableInventoryItem();
+
+	// Equips an item
+	void EquipItem(AItemEquipable* Item);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerEquipItem(AItemEquipable* Item);
+	void ServerEquipItem_Implementation(AItemEquipable* Item);
+	bool ServerEquipItem_Validate(AItemEquipable* Item);
+
+	// Sets the current equipable
+	void SetCurrentEquipable(AItemEquipable* Item, bool bFromReplication = false);
+
 protected:
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities")
+	UAbilitySystemComponent* AbilitySystemComponent;
+
+	// The Default abilities this character starts with.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Abilities")
+	TArray<TSubclassOf<UGridironGameplayAbility>> StartingAbilities;
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	// Called when all the components have been initialized
+	virtual void PostInitializeComponents() override;
 
 	// Initializes the character
 	void InitCharacter();
@@ -106,6 +144,33 @@ protected:
 	void BroadcastDeath(const FVector_NetQuantize& HitPosition, const FVector_NetQuantize& DamageForce, const FName& BoneName);
 	void BroadcastDeath_Implementation(const FVector_NetQuantize& HitPosition, const FVector_NetQuantize& DamageForce, const FName& BoneName);
 
+	virtual void OnRep_PlayerState() override;
+
+	// Cache of the movement component
+	UPROPERTY(BlueprintReadOnly, Category = "Character")
+	UGridironMovementComponent* GridironMovement;
+
+	// Destroys all inventory items. Must be called on Authority
+	void DestroyInventoryItems();
+
+	// What item is currently equipped for this character?
+	UPROPERTY(Replicated, BlueprintReadOnly, ReplicatedUsing = OnRep_CurrentEquipable, Category = "Character")
+	AItemEquipable* CurrentEquipable;
+
+	UFUNCTION()
+	void OnRep_CurrentEquipable();
+
+	// The characters inventory
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, ReplicatedUsing = OnRep_Inventory, Category = "Inventory")
+	TArray<AItemBase*> Inventory;
+
+	UFUNCTION()
+	void OnRep_Inventory();
+
+	// The default weapon this character starts with.
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Character")
+	TSubclassOf<AItemEquipable> DefaultWeapon;
+
 public:	
 
 	// Called every frame
@@ -115,6 +180,9 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 protected:
+
+	// Binds the InputComponent to the AbilitySystemComponent to allow abilities to read inputs.
+	void BindAbilitySystemToInputComponent();
 
 	// Moves the character forward.
 	void MoveForward(float Value);

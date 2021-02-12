@@ -2,18 +2,25 @@
 
 
 #include "Gridiron/Characters/GridironCharacter.h"
-#include "GameFramework/CharacterMovementComponent.h" // TODO: Remove with custom?
+#include "Gridiron/Characters/GridironMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Gridiron/GameModes/GridironGameModeBase.h"
 #include "Components/CapsuleComponent.h"
+#include "AbilitySystemComponent.h"
+#include "Gridiron/Abilities/GridironGameplayAbility.h"
+#include "Gridiron/Items/ItemBase.h"
+#include "Gridiron/Items/ItemEquipable.h"
 
 // Sets default values
-AGridironCharacter::AGridironCharacter()
+AGridironCharacter::AGridironCharacter(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer.SetDefaultSubobjectClass<UGridironMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
+
+	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 
 	bReplicates = true;
 	GetMesh()->bOwnerNoSee = true;
@@ -26,6 +33,8 @@ AGridironCharacter::AGridironCharacter()
 	MaxArmor = 100.f;
 	StartingArmor = 0.f;
 	bIsDying = false;
+	CurrentEquipable = nullptr;
+	DefaultWeapon = nullptr;
 }
 
 // Called when the game starts or when spawned
@@ -38,6 +47,9 @@ void AGridironCharacter::BeginPlay()
 
 void AGridironCharacter::InitCharacter()
 {
+	// Add the init here since we want clients to initialize the AbilitySystemComponent.
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+
 	if (!HasAuthority())
 	{
 		return;
@@ -45,6 +57,31 @@ void AGridironCharacter::InitCharacter()
 
 	Health = StartingHealth;
 	Armor = StartingArmor;
+
+	if (DefaultWeapon)
+	{
+		AddItemToInventory(DefaultWeapon);
+		EquipFirstAvailableInventoryItem();
+	}
+
+	for (auto& Ability : StartingAbilities)
+	{
+		if (Ability)
+		{
+			AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(Ability, 0, static_cast<int32>(Ability.GetDefaultObject()->InputID), this));
+		}
+	}
+}
+
+void AGridironCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	GridironMovement = Cast<UGridironMovementComponent>(GetCharacterMovement());
+	if (GridironMovement)
+	{
+		GridironMovement->OwningCharacter = this;
+	}
 }
 
 void AGridironCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -55,6 +92,8 @@ void AGridironCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	DOREPLIFETIME(AGridironCharacter, Health);
 	DOREPLIFETIME(AGridironCharacter, Armor);
 	DOREPLIFETIME(AGridironCharacter, bIsDying);
+	DOREPLIFETIME(AGridironCharacter, CurrentEquipable)
+	DOREPLIFETIME(AGridironCharacter, Inventory);
 }
 
 // Called every frame
@@ -188,6 +227,7 @@ void AGridironCharacter::OnDeath()
 	SetReplicateMovement(false);
 	TearOff();
 	SetLifeSpan(30.f);
+	DestroyInventoryItems();
 
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
@@ -202,6 +242,24 @@ void AGridironCharacter::BroadcastDeath_Implementation(const FVector_NetQuantize
 void AGridironCharacter::OnRep_IsDying()
 {
 	OnDeath();
+}
+
+void AGridironCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	// Note sure if we need this, but GASDocumentation does this to avoid a race condition, adding just in case.
+	BindAbilitySystemToInputComponent();
+}
+
+void AGridironCharacter::OnRep_Inventory()
+{
+
+}
+
+void AGridironCharacter::OnRep_CurrentEquipable()
+{
+
 }
 
 bool AGridironCharacter::IsAtOrBeyondMaxHealth() const
@@ -230,6 +288,112 @@ void AGridironCharacter::AddArmor(const float Amount)
 	}
 }
 
+void AGridironCharacter::DestroyInventoryItems()
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	for (int i = Inventory.Num() - 1; i >= 0; i--)
+	{
+		const auto Item = Inventory[i];
+		if (Item)
+		{
+			Inventory.RemoveSingle(Item);
+			Item->Destroy();
+		}
+	}
+
+	Inventory.Empty();
+}
+
+void AGridironCharacter::AddItemToInventory(TSubclassOf<AItemBase> ItemToAdd)
+{
+	if (!ItemToAdd)
+	{
+		return;
+	}
+
+	const auto Item = GetWorld()->SpawnActor<AItemBase>(ItemToAdd);
+	if (Item)
+	{
+		Item->InitItem(this);
+		Inventory.Add(Item);
+	}
+}
+
+bool AGridironCharacter::HasItemInInventory(TSubclassOf<AItemBase> ItemToFind) const
+{
+	for (auto& Item : Inventory)
+	{
+		if (!Item)
+		{
+			continue;
+		}
+
+		if (Item->GetClass() == ItemToFind)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void AGridironCharacter::EquipFirstAvailableInventoryItem()
+{
+	/*for (auto& Item : Inventory)
+	{
+		if (!Item)
+		{
+			continue;
+		}
+
+		const auto Equipable = Cast<AItemEquipable>(Item);
+		if (Equipable && Equipable->CanEquip())
+		{
+			EquipItem(Equipable);
+			return;
+		}
+	}*/
+}
+
+void AGridironCharacter::EquipItem(AItemEquipable* Item)
+{
+	if (!HasAuthority())
+	{
+		ServerEquipItem(Item);
+	}
+
+	SetCurrentEquipable(Item);
+}
+
+void AGridironCharacter::ServerEquipItem_Implementation(AItemEquipable* Item)
+{
+	EquipItem(Item);
+}
+
+bool AGridironCharacter::ServerEquipItem_Validate(AItemEquipable* Item)
+{
+	return true;
+}
+
+void AGridironCharacter::SetCurrentEquipable(AItemEquipable* Item, bool bFromReplication /*= false*/)
+{
+	/*if (CurrentEquipable)
+	{
+		CurrentEquipable->Unequip();
+	}
+
+	CurrentEquipable = Item;
+
+	if (CurrentEquipable)
+	{
+		CurrentEquipable->Equip();
+	}*/
+}
+
 // Called to bind functionality to input
 void AGridironCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -240,6 +404,8 @@ void AGridironCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 	PlayerInputComponent->BindAxis("MouseX", this, &ThisClass::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("MouseY", this, &ThisClass::AddControllerPitchInput);
+
+	BindAbilitySystemToInputComponent();
 }
 
 void AGridironCharacter::MoveForward(float Value)
@@ -250,4 +416,13 @@ void AGridironCharacter::MoveForward(float Value)
 void AGridironCharacter::MoveRight(float Value)
 {
 	AddMovementInput(GetActorRightVector(), Value);
+}
+
+void AGridironCharacter::BindAbilitySystemToInputComponent()
+{
+	if (IsValid(InputComponent))
+	{
+		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, FGameplayAbilityInputBinds(FString("ConfirmTarget"),
+			FString("CancelTarget"), FString("EAbilityInputID"), static_cast<int32>(EAbilityInputID::Confirm), static_cast<int32>(EAbilityInputID::Cancel)));
+	}
 }
