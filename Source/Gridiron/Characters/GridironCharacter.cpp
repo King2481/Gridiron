@@ -361,7 +361,7 @@ bool AGridironCharacter::HasItemInInventory(TSubclassOf<AItemBase> ItemToFind) c
 
 void AGridironCharacter::EquipFirstAvailableInventoryItem()
 {
-	/*for (auto& Item : Inventory)
+	for (auto& Item : Inventory)
 	{
 		if (!Item)
 		{
@@ -374,7 +374,7 @@ void AGridironCharacter::EquipFirstAvailableInventoryItem()
 			EquipItem(Equipable);
 			return;
 		}
-	}*/
+	}
 }
 
 void AGridironCharacter::EquipItem(AItemEquipable* Item)
@@ -399,7 +399,7 @@ bool AGridironCharacter::ServerEquipItem_Validate(AItemEquipable* Item)
 
 void AGridironCharacter::SetCurrentEquipable(AItemEquipable* Item, bool bFromReplication /*= false*/)
 {
-	/*if (CurrentEquipable)
+	if (CurrentEquipable)
 	{
 		CurrentEquipable->Unequip();
 	}
@@ -409,7 +409,27 @@ void AGridironCharacter::SetCurrentEquipable(AItemEquipable* Item, bool bFromRep
 	if (CurrentEquipable)
 	{
 		CurrentEquipable->Equip();
-	}*/
+	}
+}
+
+USkeletalMeshComponent* AGridironCharacter::GetWeaponMesh1P() const
+{
+	return WeaponMesh1P;
+}
+
+FVector AGridironCharacter::GetCameraLocation() const
+{
+	if (CameraComponent)
+	{
+		return CameraComponent->GetComponentLocation();
+	}
+
+	return FVector::ZeroVector;
+}
+
+bool AGridironCharacter::AllowWeaponSwapping() const
+{
+	return true;
 }
 
 // Called to bind functionality to input
@@ -423,6 +443,14 @@ void AGridironCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	PlayerInputComponent->BindAxis("MouseX", this, &ThisClass::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("MouseY", this, &ThisClass::AddControllerPitchInput);
 
+	PlayerInputComponent->BindAction("SelectWeaponSlotShotgun", IE_Pressed, this, &AGridironCharacter::OnSelectWeaponSlotShotgun);
+	PlayerInputComponent->BindAction("SelectWeaponSlotBullet", IE_Pressed, this, &AGridironCharacter::OnSelectWeaponSlotBullet);
+	PlayerInputComponent->BindAction("SelectWeaponSlotEnergy", IE_Pressed, this, &AGridironCharacter::OnSelectWeaponSlotEnergy);
+	PlayerInputComponent->BindAction("SelectWeaponSlotExplosive", IE_Pressed, this, &AGridironCharacter::OnSelectWeaponSlotExplosive);
+
+	PlayerInputComponent->BindAction("SelectInventoryPrevious", IE_Pressed, this, &AGridironCharacter::OnSelectInventoryPrevious);
+	PlayerInputComponent->BindAction("SelectInventoryNext", IE_Pressed, this, &AGridironCharacter::OnSelectInventoryNext);
+
 	BindAbilitySystemToInputComponent();
 }
 
@@ -434,6 +462,241 @@ void AGridironCharacter::MoveForward(float Value)
 void AGridironCharacter::MoveRight(float Value)
 {
 	AddMovementInput(GetActorRightVector(), Value);
+}
+
+void AGridironCharacter::OnSelectWeaponSlotShotgun()
+{
+	const auto Item = GetNextItemInSlot(EItemSlot::IS_Shotgun, CurrentEquipable, true);
+	if (Item && Item != CurrentEquipable)
+	{
+		EquipItem(Item);
+	}
+}
+
+void AGridironCharacter::OnSelectWeaponSlotBullet()
+{
+	const auto Item = GetNextItemInSlot(EItemSlot::IS_Bullet, CurrentEquipable, true);
+	if (Item && Item != CurrentEquipable)
+	{
+		EquipItem(Item);
+	}
+}
+
+void AGridironCharacter::OnSelectWeaponSlotEnergy()
+{
+	const auto Item = GetNextItemInSlot(EItemSlot::IS_Energy, CurrentEquipable, true);
+	if (Item && Item != CurrentEquipable)
+	{
+		EquipItem(Item);
+	}
+}
+
+void AGridironCharacter::OnSelectWeaponSlotExplosive()
+{
+	const auto Item = GetNextItemInSlot(EItemSlot::IS_Explosive, CurrentEquipable, true);
+	if (Item && Item != CurrentEquipable)
+	{
+		EquipItem(Item);
+	}
+}
+
+void AGridironCharacter::OnSelectInventoryPrevious()
+{
+	if (!CurrentEquipable)
+	{
+		EquipFirstAvailableInventoryItem();
+		return;
+	}
+
+	if (!AllowWeaponSwapping())
+	{
+		return;
+	}
+
+	AItemEquipable* ActiveItem = CurrentEquipable;
+	AItemEquipable* Item = nullptr;
+
+	// if we have a weapon, we want to try the current slot first, then the next one
+	int CurrentSlot = (int)ActiveItem->ItemSlot;
+	int OriginalSlot = CurrentSlot;
+	Item = GetPreviousItemInSlot((EItemSlot)CurrentSlot, ActiveItem, false);
+
+	// nothing else in the current slot, move on
+	while (Item == nullptr)
+	{
+		--CurrentSlot;
+
+		if (CurrentSlot < (int)EItemSlot::IS_Shotgun)
+		{
+			return;
+		}
+
+		// if we got back to our original slot, give up
+		if (CurrentSlot == OriginalSlot)
+		{
+			return;
+		}
+
+		Item = GetPreviousItemInSlot((EItemSlot)CurrentSlot, nullptr, false);
+	}
+
+	// invalid item
+	if (Item == nullptr)
+	{
+		return;
+	}
+
+	EquipItem(Item);
+}
+
+void AGridironCharacter::OnSelectInventoryNext()
+{
+	if (!CurrentEquipable)
+	{
+		EquipFirstAvailableInventoryItem();
+		return;
+	}
+
+	if (!AllowWeaponSwapping())
+	{
+		return;
+	}
+
+	AItemEquipable* ActiveItem = CurrentEquipable;
+	AItemEquipable* Item = nullptr;
+
+	// if we have a weapon, we want to try the current slot first, then the next one
+	int CurrentSlot = (int)ActiveItem->ItemSlot;
+	int OriginalSlot = CurrentSlot;
+	Item = GetNextItemInSlot((EItemSlot)CurrentSlot, ActiveItem, false);
+
+	// nothing else in the current slot, move on
+	while (Item == nullptr)
+	{
+		++CurrentSlot;
+
+		// roll over back to primary
+		if (CurrentSlot >= (int)EItemSlot::IS_Count)
+		{
+			return;
+		}
+
+		// if we got back to our original slot, give up
+		if (CurrentSlot == OriginalSlot)
+		{
+			return;
+		}
+
+		Item = GetNextItemInSlot((EItemSlot)CurrentSlot, nullptr, false);
+	}
+
+	// invalid item
+	if (Item == nullptr)
+	{
+		return;
+	}
+
+	EquipItem(Item);
+}
+
+AItemEquipable* AGridironCharacter::GetNextItemInSlot(EItemSlot Slot, AItemEquipable* CurrentItem, bool bFallbackToFirst)
+{
+	const bool bCurrentInSameSlot = (CurrentItem && CurrentItem->ItemSlot == Slot); // Are we transitioning from a weapon in the same slot?
+	bool bHasPassedCurrentItem = false;
+	AItemEquipable* FirstItemInSlot = nullptr;
+
+	// Iterate through our entire inventory
+	for (auto Item : Inventory)
+	{
+		auto Equipable = Cast<AItemEquipable>(Item);
+
+		// Skip null items or anything not matching our slot
+		if (!Equipable || Equipable->IsPendingKillPending() || Equipable->ItemSlot != Slot || !Equipable->CanEquip())
+		{
+			continue;
+		}
+
+		// Not transitioning from an item in the same slot, the first item is fine
+		if (!bCurrentInSameSlot)
+		{
+			return Equipable;
+		}
+
+		// Record the first item we encounter in this specific slot
+		if (FirstItemInSlot == nullptr)
+		{
+			FirstItemInSlot = Equipable;
+		}
+
+		if (!bHasPassedCurrentItem)
+		{
+			// Flag if we've reached our CurrentItem, the next weapon in this slot is good to use
+			bHasPassedCurrentItem = (CurrentItem == Equipable);
+		}
+		else
+		{
+			// We've passed our CurrentItem and hit a new weapon in the same slot
+			return Equipable;
+		}
+	}
+
+	// Unable to find a "next" item, assume that we reached the end of our inventory and are looping back to the first
+	if (bFallbackToFirst && bHasPassedCurrentItem && FirstItemInSlot != CurrentItem)
+	{
+		return FirstItemInSlot;
+	}
+
+	return nullptr;
+}
+
+AItemEquipable* AGridironCharacter::GetPreviousItemInSlot(EItemSlot Slot, AItemEquipable* CurrentItem, bool bFallbackToLast)
+{
+	const bool bCurrentInSameSlot = (CurrentItem && CurrentItem->ItemSlot == Slot); // Are we transitioning from a weapon in the same slot?
+	bool bHasPassedCurrentItem = false;
+	AItemEquipable* LastItemInSlot = nullptr;
+
+	// Iterate through our entire inventory backwards
+	for (int i = Inventory.Num() - 1; i >= 0; --i)
+	{
+		auto Item = Cast<AItemEquipable>(Inventory[i]);
+
+		// Skip null items or anything not matching our slot
+		if (!Item || Item->ItemSlot != Slot || !Item->CanEquip())
+		{
+			continue;
+		}
+
+		// Not transitioning from an item in the same slot, the first item is fine
+		if (!bCurrentInSameSlot)
+		{
+			return Item;
+		}
+
+		// Record the first item we encounter in this specific slot (which will be the last one in the slot)
+		if (LastItemInSlot == nullptr)
+		{
+			LastItemInSlot = Item;
+		}
+
+		if (!bHasPassedCurrentItem)
+		{
+			// Flag if we've reached our CurrentItem, the next weapon in this slot is good to use
+			bHasPassedCurrentItem = (CurrentItem == Item);
+		}
+		else
+		{
+			// We've passed our CurrentItem and hit a new weapon in the same slot
+			return Item;
+		}
+	}
+
+	// Unable to find a "previous" item, assume that we reached the end of our inventory and are looping back to the last
+	if (bFallbackToLast && bHasPassedCurrentItem && LastItemInSlot != CurrentItem)
+	{
+		return LastItemInSlot;
+	}
+
+	return nullptr;
 }
 
 void AGridironCharacter::BindAbilitySystemToInputComponent()

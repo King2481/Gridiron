@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Gridiron/Items/EquipableEnums.h"
+#include "Gridiron/Weapons/WeaponEnums.h"
 #include "GridironCharacter.generated.h"
 
 class UAbilitySystemComponent;
@@ -60,6 +62,24 @@ public:
 
 	// Sets the current equipable
 	void SetCurrentEquipable(AItemEquipable* Item, bool bFromReplication = false);
+
+	// Returns the first person weapon mesh for the character
+	UFUNCTION(BlueprintPure, Category = "Character")
+	USkeletalMeshComponent* GetWeaponMesh1P() const;
+
+	// Returns the camera component's location for this charater
+	UFUNCTION(BlueprintPure, Category = "Camera")
+	FVector GetCameraLocation() const;
+
+	// Gets the next item for this item slot
+	AItemEquipable* GetNextItemInSlot(EItemSlot Slot, AItemEquipable* CurrentItem, bool bFallbackToFirst);
+
+	// Gets the previous for this item slot
+	AItemEquipable* GetPreviousItemInSlot(EItemSlot Slot, AItemEquipable* CurrentItem, bool bFallbackToLast);
+
+	// Checks to see if we are allowed to weapon swap
+	UFUNCTION(BlueprintPure, Category = "Character")
+	bool AllowWeaponSwapping() const;
 
 protected:
 
@@ -202,4 +222,12 @@ protected:
 
 	// Moves the character right.
 	void MoveRight(float Value);
+
+	void OnSelectWeaponSlotShotgun();
+	void OnSelectWeaponSlotBullet();
+	void OnSelectWeaponSlotEnergy();
+	void OnSelectWeaponSlotExplosive();
+
+	void OnSelectInventoryPrevious();
+	void OnSelectInventoryNext();
 };
