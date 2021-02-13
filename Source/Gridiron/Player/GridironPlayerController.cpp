@@ -4,6 +4,7 @@
 #include "Gridiron/Player/GridironPlayerController.h"
 #include "Gridiron/Player/GridironPlayerState.h"
 #include "Gridiron/UI/GridironHUD.h"
+#include "Kismet/GameplayStatics.h"
 
 AGridironPlayerController::AGridironPlayerController()
 {
@@ -115,4 +116,12 @@ void AGridironPlayerController::ClientOnRoundWon_Implementation(AGridironPlayerS
 	SetIgnoreLookInput(true);
 
 	OnRoundWonDelegate.Broadcast(WinningPlayerState, WinningTeam);
+}
+
+void AGridironPlayerController::ClientPlaySound2D_Implementation(USoundBase* SoundToPlay)
+{
+	if (SoundToPlay)
+	{
+		UGameplayStatics::PlaySound2D(this, SoundToPlay);
+	}
 }

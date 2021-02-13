@@ -56,6 +56,11 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnRoundWonDelegate OnRoundWonDelegate;
 
+	// Will play a sound only this player will hear
+	UFUNCTION(Client, Reliable)
+	void ClientPlaySound2D(USoundBase* SoundToPlay);
+	void ClientPlaySound2D_Implementation(USoundBase* SoundToPlay);
+
 protected:
 
 	// Called when we want to start a chat
