@@ -2,4 +2,9 @@
 
 
 #include "Gridiron/GameModes/GridironGameState.h"
+#include "Net/UnrealNetwork.h"
 
+AGridironGameState::AGridironGameState()
+{
+
+}

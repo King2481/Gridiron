@@ -103,3 +103,16 @@ void AGridironPlayerController::UpdateInputMode()
 	SetInputMode(FInputModeGameOnly());
 	bShowMouseCursor = false;
 }
+
+void AGridironPlayerController::OnRoundWon(AGridironPlayerState* WinningPlayerState, uint8 WinningTeam)
+{
+	ClientOnRoundWon(WinningPlayerState, WinningTeam);
+}
+
+void AGridironPlayerController::ClientOnRoundWon_Implementation(AGridironPlayerState* WinningPlayerState, uint8 WinningTeam)
+{
+	SetIgnoreMoveInput(true);
+	SetIgnoreLookInput(true);
+
+	OnRoundWonDelegate.Broadcast(WinningPlayerState, WinningTeam);
+}

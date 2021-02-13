@@ -8,6 +8,8 @@
 
 class AGridironPlayerState;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRoundWonDelegate, AGridironPlayerState*, WinningPlayerState, uint8, WinningTeam);
+
 /**
  * 
  */
@@ -38,6 +40,21 @@ public:
 
 	// Called when the chatbox has closed.
 	void OnChatInputEnded();
+
+	/* Called when a round has been won from the gamemode.
+	 * If single based, there will be a winning player state,
+	 * otherwise, a winning team.
+	 */
+	void OnRoundWon(AGridironPlayerState* WinningPlayerState, uint8 WinningTeam);
+
+	// Client version of OnRoundWon()
+	UFUNCTION(Client, Reliable)
+	void ClientOnRoundWon(AGridironPlayerState* WinningPlayerState, uint8 WinningTeam);
+	void ClientOnRoundWon_Implementation(AGridironPlayerState* WinningPlayerState, uint8 WinningTeam);
+
+	// Delegate for when a round is won.
+	UPROPERTY(BlueprintAssignable)
+	FOnRoundWonDelegate OnRoundWonDelegate;
 
 protected:
 

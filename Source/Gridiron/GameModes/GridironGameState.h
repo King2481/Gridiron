@@ -13,5 +13,9 @@ UCLASS()
 class GRIDIRON_API AGridironGameState : public AGameState
 {
 	GENERATED_BODY()
-	
+
+public:
+
+	AGridironGameState();
+
 };
