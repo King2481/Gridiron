@@ -44,7 +44,7 @@ void AItemWeapon::InitItem(AGridironCharacter* NewOwner)
 		// We were just picked up, give the owner some ammo.
 		if (StartingAmmo > 0)
 		{
-			// NewOwner->GiveAmmo(AmmoType, StartingAmmo);
+			NewOwner->GiveAmmo(AmmoType, StartingAmmo);
 		}
 	}
 }
@@ -62,7 +62,7 @@ void AItemWeapon::Unequip()
 
 	if (PawnOwner)
 	{
-		// PawnOwner->StoreAmmo(AmmoType, Ammo);
+		PawnOwner->StoreAmmo(AmmoType, Ammo);
 	}
 }
 
@@ -126,7 +126,7 @@ void AItemWeapon::UpdateAmmo()
 {
 	if (PawnOwner)
 	{
-		// Ammo = PawnOwner->GetAmmoAmountForType(AmmoType);
+		Ammo = PawnOwner->GetAmmoAmountForType(AmmoType);
 	}
 }
 

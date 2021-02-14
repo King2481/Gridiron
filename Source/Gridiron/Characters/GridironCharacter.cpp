@@ -10,6 +10,7 @@
 #include "Gridiron/Abilities/GridironGameplayAbility.h"
 #include "Gridiron/Items/ItemBase.h"
 #include "Gridiron/Items/ItemEquipable.h"
+#include "Gridiron/Weapons/ItemWeapon.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Camera/CameraComponent.h"
 
@@ -115,6 +116,9 @@ void AGridironCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	DOREPLIFETIME(AGridironCharacter, bIsDying);
 	DOREPLIFETIME(AGridironCharacter, CurrentEquipable)
 	DOREPLIFETIME(AGridironCharacter, Inventory);
+
+	// Owner only
+	DOREPLIFETIME_CONDITION(AGridironCharacter, StoredAmmo, COND_OwnerOnly);
 }
 
 // Called every frame
@@ -433,6 +437,71 @@ FVector AGridironCharacter::GetCameraLocation() const
 bool AGridironCharacter::AllowWeaponSwapping() const
 {
 	return true;
+}
+
+void AGridironCharacter::GiveAmmo(EAmmoType AmmoType, int32 AmountToGive)
+{
+	bool bFound = false;
+
+	for (auto& AmmoSlot : StoredAmmo)
+	{
+		if (AmmoSlot.AmmoType != AmmoType)
+		{
+			continue;
+		}
+
+		AmmoSlot.Ammo += AmountToGive;
+		bFound = true;
+	}
+
+	if (!bFound)
+	{
+		// Couldn't find it, add it to our stored ammo.
+		FStoredAmmo NewAmmo(AmmoType, AmountToGive);
+		StoredAmmo.Add(NewAmmo);
+	}
+
+	const auto Weapon = Cast<AItemWeapon>(CurrentEquipable);
+	if (Weapon)
+	{
+		Weapon->UpdateAmmo();
+	}
+}
+
+void AGridironCharacter::StoreAmmo(EAmmoType AmmoType, int32 AmountToStore)
+{
+	for (auto& AmmoSlot : StoredAmmo)
+	{
+		if (AmmoSlot.AmmoType != AmmoType)
+		{
+			continue;
+		}
+
+		AmmoSlot.Ammo = AmountToStore;
+		return;
+	}
+
+	// Couldn't find it, add it to our stored ammo.
+	FStoredAmmo NewAmmo(AmmoType, AmountToStore);
+	StoredAmmo.Add(NewAmmo);
+}
+
+int32 AGridironCharacter::GetAmmoAmountForType(EAmmoType AmmoType) const
+{
+	int32 Amount = 0;
+
+	for (auto& AmmoSlot : StoredAmmo)
+	{
+		if (AmmoSlot.AmmoType != AmmoType)
+		{
+			continue;
+		}
+
+		Amount = AmmoSlot.Ammo;
+		break;
+	}
+
+	return Amount;
 }
 
 void AGridironCharacter::GiveCharacterAbility(TSubclassOf<UGridironGameplayAbility> Ability)

@@ -15,6 +15,30 @@ class AItemBase;
 class AItemEquipable;
 class UCameraComponent;
 
+USTRUCT(BlueprintType)
+struct FStoredAmmo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite)
+	EAmmoType AmmoType;
+
+	UPROPERTY(BlueprintReadWrite)
+	int32 Ammo;
+
+	FStoredAmmo()
+	{
+		AmmoType = EAmmoType::AT_None;
+		Ammo = 0;
+	}
+
+	FStoredAmmo(EAmmoType Type, int32 StoreAmount)
+	{
+		AmmoType = Type;
+		Ammo = StoreAmount;
+	}
+};
+
 UCLASS()
 class GRIDIRON_API AGridironCharacter : public ACharacter
 {
@@ -88,6 +112,18 @@ public:
 	// Removes a gameplay ability
 	UFUNCTION(BlueprintCallable, Category = "Character")
 	void RemoveCharacterAbility(TSubclassOf<UGridironGameplayAbility> Ability);
+
+	// Adds additional ammo for the specified ammo type.
+	UFUNCTION(BlueprintCallable, Category = "Character")
+	void GiveAmmo(EAmmoType AmmoType, int32 AmountToGive);
+
+	// Stores whatever ammo we have for the specifed ammo type. (Note, this will OVERWRITE the stored ammo, if you wish to add ammo. Please use GiveAmmo())
+	UFUNCTION(BlueprintCallable, Category = "Character")
+	void StoreAmmo(EAmmoType AmmoType, int32 AmountToStore);
+
+	// Returns the amount of ammo we have for the specifed type.
+	UFUNCTION(BlueprintPure, Category = "Character")
+	int32 GetAmmoAmountForType(EAmmoType AmmoType) const;
 
 protected:
 
@@ -211,6 +247,10 @@ protected:
 	/** Weapon mesh */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh")
 	USkeletalMeshComponent* WeaponMesh1P;
+
+	// The stored ammo for this character
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Character")
+	TArray<FStoredAmmo> StoredAmmo;
 
 public:	
 
