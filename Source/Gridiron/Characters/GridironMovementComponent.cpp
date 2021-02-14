@@ -11,6 +11,21 @@ UGridironMovementComponent::UGridironMovementComponent()
 	RequestToStartDash = false;
 	GroundDashMultiplier = 2.f;
 	AirbornDashMultiplier = 1.1f;
+
+	RequestToStartAim = false;
+	AimSpeedMultiplier = 0.4f;
+}
+
+float UGridironMovementComponent::GetMaxSpeed() const
+{
+	float MaxSpeed = Super::GetMaxSpeed();
+
+	if (RequestToStartAim)
+	{
+		MaxSpeed *= AimSpeedMultiplier;
+	}
+
+	return MaxSpeed;
 }
 
 void UGridironMovementComponent::StartDash()
@@ -31,6 +46,11 @@ void UGridironMovementComponent::EndDash()
 	RequestToStartDash = false;
 }
 
+void UGridironMovementComponent::SetRequestToStartAim(const bool bNewAim)
+{
+	RequestToStartAim = bNewAim;
+}
+
 void UGridironMovementComponent::UpdateFromCompressedFlags(uint8 Flags)
 {
 	Super::UpdateFromCompressedFlags(Flags);
@@ -39,6 +59,7 @@ void UGridironMovementComponent::UpdateFromCompressedFlags(uint8 Flags)
 	//UpdateFromCompressed flags simply copies the flags from the saved move into the movement component.
 	//It basically just resets the movement component to the state when the move was made so it can simulate from there.
 	RequestToStartDash = (Flags & FSavedMove_Character::FLAG_Custom_0) != 0;
+	RequestToStartAim = (Flags & FSavedMove_Character::FLAG_Custom_1) != 0;
 }
 
 FNetworkPredictionData_Client * UGridironMovementComponent::GetPredictionData_Client() const
@@ -62,6 +83,7 @@ void UGridironMovementComponent::FGridironSavedMove::Clear()
 	Super::Clear();
 
 	SavedRequestToStartDash = false;
+	SavedRequestToStartAim = false;
 }
 
 uint8 UGridironMovementComponent::FGridironSavedMove::GetCompressedFlags() const
@@ -73,6 +95,11 @@ uint8 UGridironMovementComponent::FGridironSavedMove::GetCompressedFlags() const
 		Result |= FLAG_Custom_0;
 	}
 
+	if (SavedRequestToStartAim)
+	{
+		Result |= FLAG_Custom_1;
+	}
+
 	return Result;
 }
 
@@ -80,6 +107,11 @@ bool UGridironMovementComponent::FGridironSavedMove::CanCombineWith(const FSaved
 {
 	//Set which moves can be combined together. This will depend on the bit flags that are used.
 	if (SavedRequestToStartDash != ((FGridironSavedMove*)&NewMove)->SavedRequestToStartDash)
+	{
+		return false;
+	}
+
+	if (SavedRequestToStartAim != ((FGridironSavedMove*)&NewMove)->SavedRequestToStartAim)
 	{
 		return false;
 	}
@@ -95,6 +127,7 @@ void UGridironMovementComponent::FGridironSavedMove::SetMoveFor(ACharacter * Cha
 	if (CharacterMovement)
 	{
 		SavedRequestToStartDash = CharacterMovement->RequestToStartDash;
+		SavedRequestToStartAim = CharacterMovement->RequestToStartAim;
 	}
 }
 

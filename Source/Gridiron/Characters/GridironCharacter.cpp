@@ -37,6 +37,7 @@ AGridironCharacter::AGridironCharacter(const FObjectInitializer& ObjectInitializ
 	StartingArmor = 0.f;
 	bIsDying = false;
 	CurrentEquipable = nullptr;
+	bIsAiming = false;
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	CameraComponent->SetupAttachment(RootComponent);
@@ -119,6 +120,9 @@ void AGridironCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 
 	// Owner only
 	DOREPLIFETIME_CONDITION(AGridironCharacter, StoredAmmo, COND_OwnerOnly);
+
+	// Third Parties only
+	DOREPLIFETIME_CONDITION(AGridironCharacter, bIsAiming, COND_SkipOwner);
 }
 
 // Called every frame
@@ -536,6 +540,22 @@ void AGridironCharacter::RemoveCharacterAbility(TSubclassOf<UGridironGameplayAbi
 			}
 		}
 	}
+}
+
+void AGridironCharacter::SetIsAiming(const bool bNewAiming)
+{
+	// We _shouldn't_ have to do a server RPC call as this is ability driven, which supports prediction.
+	bIsAiming = bNewAiming;
+
+	if (GridironMovement)
+	{
+		GridironMovement->SetRequestToStartAim(bNewAiming);
+	}
+}
+
+bool AGridironCharacter::IsAiming() const
+{
+	return bIsAiming;
 }
 
 // Called to bind functionality to input

@@ -39,6 +39,9 @@ class GRIDIRON_API UGridironMovementComponent : public UCharacterMovementCompone
 
 		// Dash
 		uint8 SavedRequestToStartDash : 1;
+
+		// Aiming
+		uint8 SavedRequestToStartAim : 1;
 	};
 
 	class FGridironNetworkPredictionData_Client : public FNetworkPredictionData_Client_Character
@@ -56,11 +59,15 @@ public:
 
 	UGridironMovementComponent();
 
+	virtual float GetMaxSpeed() const override;
+
 	// Cache of the owner of this movement component;
 	UPROPERTY(BlueprintReadOnly, Category = "Movement Component")
 	AGridironCharacter* OwningCharacter;
 
 	uint8 RequestToStartDash : 1;
+
+	uint8 RequestToStartAim : 1;
 
 	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
 	virtual class FNetworkPredictionData_Client* GetPredictionData_Client() const override;
@@ -76,5 +83,10 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Character Movement: Dash")
 	float AirbornDashMultiplier;
+
+	void SetRequestToStartAim(const bool bNewAim);
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Character Movement: Aiming")
+	float AimSpeedMultiplier;
 	
 };

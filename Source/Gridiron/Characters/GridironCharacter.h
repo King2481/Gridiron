@@ -125,6 +125,14 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Character")
 	int32 GetAmmoAmountForType(EAmmoType AmmoType) const;
 
+	// Sets the characters aiming status
+	UFUNCTION(BlueprintCallable, Category = "Character")		
+	void SetIsAiming(const bool bNewAiming);
+
+	// Returns if the character is aiming or not.
+	UFUNCTION(BlueprintPure, Category = "Character")
+	bool IsAiming() const;
+
 protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities")
@@ -251,6 +259,10 @@ protected:
 	// The stored ammo for this character
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Character")
 	TArray<FStoredAmmo> StoredAmmo;
+
+	// Is this character currently aiming their weapon?
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Character")
+	bool bIsAiming;
 
 public:	
 
