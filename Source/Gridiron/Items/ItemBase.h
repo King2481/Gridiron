@@ -57,4 +57,8 @@ protected:
 	// Item mesh
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh")
 	USkeletalMeshComponent* Mesh3P;
+
+	// The mesh that the first person mesh will use.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh")
+	USkeletalMesh* Mesh1PAsset;
 };

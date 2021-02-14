@@ -36,8 +36,8 @@ void AItemEquipable::Equip()
 	{
 		PawnOwner->GiveCharacterAbility(FireAbility);
 		PawnOwner->GiveCharacterAbility(AltFireAbility);
-		// PawnOwner->SetupFirstPersonWeaponMesh(Mesh1PAsset);
-		// PawnOwner->PlayAnimationMontages(EquipAnimationPair.FirstPersonAnim, EquipAnimationPair.ThirdPersonAnim);
+		PawnOwner->SetupFirstPersonWeaponMesh(Mesh1PAsset);
+		PawnOwner->PlayAnimationMontages(EquipAnimationPair.FirstPersonAnim, EquipAnimationPair.ThirdPersonAnim);
 	}
 
 	SetActorHiddenInGame(false);

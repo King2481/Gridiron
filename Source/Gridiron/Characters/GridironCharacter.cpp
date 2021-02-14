@@ -580,6 +580,27 @@ bool AGridironCharacter::IsAiming() const
 	return bIsAiming;
 }
 
+void AGridironCharacter::SetupFirstPersonWeaponMesh(USkeletalMesh* NewFirstPersonMesh)
+{
+	if (WeaponMesh1P)
+	{
+		WeaponMesh1P->SetSkeletalMesh(NewFirstPersonMesh);
+	}
+}
+
+void AGridironCharacter::PlayAnimationMontages(UAnimMontage* FirstPersonMontage, UAnimMontage* ThirdPersonMontage)
+{
+	if (FirstPersonMontage && ArmMesh1P->GetAnimInstance())
+	{
+		ArmMesh1P->GetAnimInstance()->Montage_Play(FirstPersonMontage);
+	}
+
+	if (ThirdPersonMontage && GetMesh()->GetAnimInstance())
+	{
+		GetMesh()->GetAnimInstance()->Montage_Play(ThirdPersonMontage);
+	}
+}
+
 // Called to bind functionality to input
 void AGridironCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {

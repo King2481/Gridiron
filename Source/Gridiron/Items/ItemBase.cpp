@@ -23,6 +23,7 @@ AItemBase::AItemBase()
 	SetRootComponent(Mesh3P);
 
 	ItemName = FText::GetEmpty();
+	Mesh1PAsset = nullptr;
 }
 
 void AItemBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

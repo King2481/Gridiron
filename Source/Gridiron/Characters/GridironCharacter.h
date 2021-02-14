@@ -133,6 +133,13 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Character")
 	bool IsAiming() const;
 
+	// Plays the following montages for the first and third person meshes
+	UFUNCTION(BlueprintCallable, Category = "Character")
+	void PlayAnimationMontages(UAnimMontage* FirstPersonMontage, UAnimMontage* ThirdPersonMontage);
+
+	// Sets the new first person mesh for the weapon
+	void SetupFirstPersonWeaponMesh(USkeletalMesh* NewFirstPersonMesh);
+
 protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities")
