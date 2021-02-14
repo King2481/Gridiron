@@ -11,6 +11,7 @@
 #include "Gridiron/Items/ItemBase.h"
 #include "Gridiron/Items/ItemEquipable.h"
 #include "Gridiron/Weapons/ItemWeapon.h"
+#include "Gridiron/Weapons/GridironDamageType.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Camera/CameraComponent.h"
 
@@ -137,10 +138,6 @@ float AGridironCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dam
 	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	if (ActualDamage > 0.f)
 	{
-		FHitResult HitInfo;
-		FVector MomentumDir;
-		DamageEvent.GetBestHitInfo(this, EventInstigator, HitInfo, MomentumDir);
-
 		const auto GM = GetWorld()->GetAuthGameMode<AGridironGameModeBase>();
 		if (GM)
 		{
@@ -161,17 +158,11 @@ float AGridironCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dam
 		if (Health <= 0)
 		{
 			Die(ActualDamage, DamageEvent, EventInstigator, DamageCauser);
-
-			// If we actually are dying, since Die() may return false. Launch our character now.
-			if (bIsDying)
-			{
-				BroadcastDeath(HitInfo.ImpactPoint, MomentumDir * 12500.f, HitInfo.BoneName);
-			}
 		}
 
-		const FVector Momentum = CalculateMomentumFromDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 		if (!bIsDying)
 		{
+			const FVector Momentum = CalculateMomentumFromDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 			LaunchCharacter(Momentum, true, false);
 		}
 
@@ -183,6 +174,29 @@ float AGridironCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dam
 
 FVector AGridironCharacter::CalculateMomentumFromDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) const
 {
+	if (!DamageEvent.DamageTypeClass)
+	{
+		return FVector(0.f);
+	}
+
+	FHitResult HitInfo;
+	FVector MomentumDir;
+	const auto DamageType = DamageEvent.DamageTypeClass->GetDefaultObject<UGridironDamageType>();
+
+	if (!DamageType)
+	{
+		return FVector(0);
+	}
+
+	const float Magnitude = DamageType->Magnitude;
+
+	DamageEvent.GetBestHitInfo(this, EventInstigator, HitInfo, MomentumDir);
+
+	if (DamageType->IsA<UDamageTypeExplosive>())
+	{
+		return (GetActorLocation() - DamageCauser->GetActorLocation()).GetSafeNormal() * Magnitude;
+	}
+
 	return FVector(0);
 }
 
@@ -205,7 +219,6 @@ float AGridironCharacter::DamageArmor(float DamageAmount, FDamageEvent const& Da
 
 void AGridironCharacter::FellOutOfWorld(const UDamageType& dmgType)
 {
-	// TODO: Custom Damage Type Class for Falling out of world.
 	Die(Health, FDamageEvent(dmgType.GetClass()), GetController(), nullptr);
 }
 
@@ -229,6 +242,15 @@ bool AGridironCharacter::Die(float KillingDamage, FDamageEvent const& DamageEven
 	}
 
 	OnDeath();
+
+	FHitResult HitInfo;
+	FVector MomentumDir;
+	DamageEvent.GetBestHitInfo(this, EventInstigator, HitInfo, MomentumDir);
+
+	const auto DamageType = DamageEvent.DamageTypeClass->GetDefaultObject<UGridironDamageType>();
+	const float LaunchMagnitude = DamageType ? DamageType->RagdollLaunchMagnitude : 12500.f;
+
+	BroadcastDeath(HitInfo.ImpactPoint, MomentumDir * LaunchMagnitude, HitInfo.BoneName);
 
 	return true;
 }
