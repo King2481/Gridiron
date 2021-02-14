@@ -140,6 +140,37 @@ public:
 	// Sets the new first person mesh for the weapon
 	void SetupFirstPersonWeaponMesh(USkeletalMesh* NewFirstPersonMesh);
 
+	// Called when the character begins to slide
+	UFUNCTION(BlueprintCallable, Category = "Character")
+	void OnBeginSlide();
+
+	// Called when a slide has ended and variables need to be reset.
+	void OnEndSlide();
+
+	// Can this character actually slide?
+	UFUNCTION(BlueprintPure, Category = "Character")
+	bool CanSlide() const;
+
+	// Public getter for bIsSliding
+	UFUNCTION(BlueprintPure, Category = "Character")
+	bool IsSliding() const;
+
+	// Starts a dashing state (ie: charge)
+	UFUNCTION(BlueprintCallable, Category = "Character")
+	void StartDash();
+
+	// Ends a dashing state
+	UFUNCTION(BlueprintCallable, Category = "Character")
+	void EndDash();
+
+	// Can this character actually dash?
+	UFUNCTION(BlueprintPure, Category = "Character")
+	bool CanDash() const;
+
+	// Public getter for bIsDashing
+	UFUNCTION(BlueprintPure, Category = "Character")
+	bool IsDashing() const;
+
 protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities")
@@ -270,6 +301,14 @@ protected:
 	// Is this character currently aiming their weapon?
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Character")
 	bool bIsAiming;
+
+	// Is this character currently sliding across the floor?
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Character")
+	bool bIsSliding;
+
+	// Is this character currently dashing?
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Character")
+	bool bIsDashing;
 
 public:	
 

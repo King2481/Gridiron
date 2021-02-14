@@ -14,10 +14,21 @@ UGridironMovementComponent::UGridironMovementComponent()
 
 	RequestToStartAim = false;
 	AimSpeedMultiplier = 0.4f;
+
+	bIsSliding = false;
+	StartingSlideSpeed = 1500.f;
+	CurrentSlideSpeed = 0.f;
+	SlideDecrementRate = 25.f;
+	SpeedNeededToEndSlide = 50.f;
 }
 
 float UGridironMovementComponent::GetMaxSpeed() const
 {
+	if (bIsSliding)
+	{
+		return CurrentSlideSpeed;
+	}
+
 	float MaxSpeed = Super::GetMaxSpeed();
 
 	if (RequestToStartAim)
@@ -51,6 +62,19 @@ void UGridironMovementComponent::SetRequestToStartAim(const bool bNewAim)
 	RequestToStartAim = bNewAim;
 }
 
+void UGridironMovementComponent::OnBeginSlide()
+{
+	CurrentSlideSpeed = StartingSlideSpeed;
+}
+
+void UGridironMovementComponent::OnEndSlide()
+{
+	if (OwningCharacter)
+	{
+		OwningCharacter->OnEndSlide();
+	}
+}
+
 void UGridironMovementComponent::UpdateFromCompressedFlags(uint8 Flags)
 {
 	Super::UpdateFromCompressedFlags(Flags);
@@ -60,6 +84,7 @@ void UGridironMovementComponent::UpdateFromCompressedFlags(uint8 Flags)
 	//It basically just resets the movement component to the state when the move was made so it can simulate from there.
 	RequestToStartDash = (Flags & FSavedMove_Character::FLAG_Custom_0) != 0;
 	RequestToStartAim = (Flags & FSavedMove_Character::FLAG_Custom_1) != 0;
+	bIsSliding = (Flags & FSavedMove_Character::FLAG_Custom_2) != 0;
 }
 
 FNetworkPredictionData_Client * UGridironMovementComponent::GetPredictionData_Client() const
@@ -84,6 +109,7 @@ void UGridironMovementComponent::FGridironSavedMove::Clear()
 
 	SavedRequestToStartDash = false;
 	SavedRequestToStartAim = false;
+	SavedRequestToStartSlide = false;
 }
 
 uint8 UGridironMovementComponent::FGridironSavedMove::GetCompressedFlags() const
@@ -98,6 +124,11 @@ uint8 UGridironMovementComponent::FGridironSavedMove::GetCompressedFlags() const
 	if (SavedRequestToStartAim)
 	{
 		Result |= FLAG_Custom_1;
+	}
+
+	if (SavedRequestToStartSlide)
+	{
+		Result |= FLAG_Custom_2;
 	}
 
 	return Result;
@@ -116,6 +147,11 @@ bool UGridironMovementComponent::FGridironSavedMove::CanCombineWith(const FSaved
 		return false;
 	}
 
+	if (SavedRequestToStartSlide != ((FGridironSavedMove*)&NewMove)->SavedRequestToStartSlide)
+	{
+		return false;
+	}
+
 	return Super::CanCombineWith(NewMove, Character, MaxDelta);
 }
 
@@ -128,6 +164,7 @@ void UGridironMovementComponent::FGridironSavedMove::SetMoveFor(ACharacter * Cha
 	{
 		SavedRequestToStartDash = CharacterMovement->RequestToStartDash;
 		SavedRequestToStartAim = CharacterMovement->RequestToStartAim;
+		SavedRequestToStartSlide = CharacterMovement->bIsSliding;
 	}
 }
 

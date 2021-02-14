@@ -39,6 +39,8 @@ AGridironCharacter::AGridironCharacter(const FObjectInitializer& ObjectInitializ
 	bIsDying = false;
 	CurrentEquipable = nullptr;
 	bIsAiming = false;
+	bIsSliding = false;
+	bIsDashing = false;
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	CameraComponent->SetupAttachment(RootComponent);
@@ -124,6 +126,8 @@ void AGridironCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 
 	// Third Parties only
 	DOREPLIFETIME_CONDITION(AGridironCharacter, bIsAiming, COND_SkipOwner);
+	DOREPLIFETIME_CONDITION(AGridironCharacter, bIsSliding, COND_SkipOwner);
+	DOREPLIFETIME_CONDITION(AGridironCharacter, bIsDashing, COND_SkipOwner);
 }
 
 // Called every frame
@@ -279,7 +283,7 @@ void AGridironCharacter::OnDeath()
 	TearOff();
 	SetLifeSpan(30.f);
 	DestroyInventoryItems();
-
+	// TODO: I imagine we'd want to clear any abilities.
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
@@ -599,6 +603,68 @@ void AGridironCharacter::PlayAnimationMontages(UAnimMontage* FirstPersonMontage,
 	{
 		GetMesh()->GetAnimInstance()->Montage_Play(ThirdPersonMontage);
 	}
+}
+
+void AGridironCharacter::OnBeginSlide()
+{
+	bIsSliding = true;
+
+	// We _shouldn't_ have to do a server RPC call as this is ability driven, which supports prediction.
+	if (GridironMovement)
+	{
+		GridironMovement->OnBeginSlide();
+	}
+}
+
+void AGridironCharacter::OnEndSlide()
+{
+	bIsSliding = false;
+}
+
+bool AGridironCharacter::CanSlide() const
+{
+	if (GridironMovement && GridironMovement->IsFalling())
+	{
+		return false;
+	}
+
+	return !bIsSliding;
+}
+
+bool AGridironCharacter::IsSliding() const
+{
+	return bIsSliding;
+}
+
+void AGridironCharacter::StartDash()
+{
+	bIsDashing = true;
+
+	// We _shouldn't_ have to do a server RPC call as this is ability driven, which supports prediction.
+	if (GridironMovement)
+	{
+		GridironMovement->StartDash();
+	}
+}
+
+void AGridironCharacter::EndDash()
+{
+	bIsDashing = false;
+
+	if (GridironMovement)
+	{
+		GridironMovement->EndDash();
+	}
+}
+
+bool AGridironCharacter::CanDash() const
+{
+	return !bIsDashing;
+}
+
+bool AGridironCharacter::IsDashing() const
+{
+	return bIsDashing;
 }
 
 // Called to bind functionality to input

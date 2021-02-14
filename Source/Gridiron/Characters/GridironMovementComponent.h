@@ -42,6 +42,9 @@ class GRIDIRON_API UGridironMovementComponent : public UCharacterMovementCompone
 
 		// Aiming
 		uint8 SavedRequestToStartAim : 1;
+
+		// Sliding
+		uint8 SavedRequestToStartSlide : 1;
 	};
 
 	class FGridironNetworkPredictionData_Client : public FNetworkPredictionData_Client_Character
@@ -65,28 +68,58 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Movement Component")
 	AGridironCharacter* OwningCharacter;
 
+	// Is this character dashing?
 	uint8 RequestToStartDash : 1;
 
+	// Is this character aiming their weapon (movement component version)
 	uint8 RequestToStartAim : 1;
+
+	// Is this character sliding accross the floor?
+	uint8 bIsSliding : 1;
 
 	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
 	virtual class FNetworkPredictionData_Client* GetPredictionData_Client() const override;
 
-	UFUNCTION(BlueprintCallable, Category = "Character Movement: Dash")
+	// Will start a dash from the character movement component side of things
 	void StartDash();
 
-	UFUNCTION(BlueprintCallable, Category = "Character Movement: Dash")
+	// Will End a dash from the character movement component side of things
 	void EndDash();
 
+	// When dashing from the ground, what is the speed multiplier?
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Character Movement: Dash")
 	float GroundDashMultiplier;
 
+	// When dashing from the air, what is the speed multiplier?
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Character Movement: Dash")
 	float AirbornDashMultiplier;
 
+	// Called when we are aiming and need to update some things in the character movement specifically
 	void SetRequestToStartAim(const bool bNewAim);
 
+	// When aiming, what is our ADS speed multiplier?
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Character Movement: Aiming")
 	float AimSpeedMultiplier;
-	
+
+	// Called to begin slide related things for the character movement component.
+	void OnBeginSlide();
+
+	// Called to end slide related things for the character movement component.
+	void OnEndSlide();
+
+	// When we slide, what is the default speed we start with?
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Sliding")
+	float StartingSlideSpeed;
+
+	// What is our current slide speed?
+	UPROPERTY(BlueprintReadOnly, Category = "Character Movement: Sliding")
+	float CurrentSlideSpeed;
+
+	// How slowly do we slow down when sliding?
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Sliding")
+	float SlideDecrementRate;
+
+	// What is the minimum speed to end a slide?
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Sliding")
+	float SpeedNeededToEndSlide;
 };
