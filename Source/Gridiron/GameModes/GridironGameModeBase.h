@@ -100,4 +100,18 @@ public:
 
 	FTimerHandle GameOverTimerHandle;
 
+protected:
+
+	// Blueprint event for a character death
+	UFUNCTION(BlueprintImplementableEvent, Category = "Gamemode")
+	void BlueprintOnCharacterKilled(AGridironCharacter* Victim, float KillingDamage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
+	
+	// Called when the Gamemode has reached a the winning condition and there is a solo player that has won.
+	UFUNCTION(BlueprintCallable, Category = "Gamemode")
+	void PlayerStateWin(AGridironPlayerState* NewWinningPlayerState);
+
+	// Called when the Gamemode has reached a the winning condition and there is team that has won.
+	UFUNCTION(BlueprintCallable, Category = "Gamemode")
+	void TeamWin(const uint8 NewWinningTeam);
+
 };

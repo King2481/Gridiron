@@ -99,6 +99,8 @@ void AGridironGameModeBase::OnCharacterKilled(AGridironCharacter* Victim, float 
 	{
 		VictimPS->ScoreDeath();
 	}
+
+	BlueprintOnCharacterKilled(Victim, KillingDamage, DamageEvent, EventInstigator, DamageCauser);
 }
 
 float AGridironGameModeBase::OnCharacterTakeDamage(AGridironCharacter* Reciever, float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) const
@@ -185,4 +187,18 @@ void AGridironGameModeBase::HandleGameOver()
 bool AGridironGameModeBase::IsPasswordProtected() const
 {
 	return !ServerPassword.IsEmpty();
+}
+
+void AGridironGameModeBase::PlayerStateWin(AGridironPlayerState* NewWinningPlayerState)
+{
+	// Winner, inform everyone.
+	WinningPlayerState = NewWinningPlayerState;
+	SetMatchState(MatchState::RoundWon);
+}
+
+void AGridironGameModeBase::TeamWin(const uint8 NewWinningTeam)
+{
+	// Winner, inform everyone.
+	WinningTeamId = NewWinningTeam;
+	SetMatchState(MatchState::RoundWon);
 }
