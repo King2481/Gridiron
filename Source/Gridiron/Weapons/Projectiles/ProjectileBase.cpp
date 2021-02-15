@@ -15,6 +15,12 @@ AProjectileBase::AProjectileBase()
 
 	bReplicates = true;
 
+	CollisionComp = CreateOptionalDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
+	CollisionComp->BodyInstance.SetCollisionProfileName("Projectile");
+	CollisionComp->SetGenerateOverlapEvents(false);
+
+	RootComponent = CollisionComp;
+
 	// Use a ProjectileMovementComponent to govern this projectile's movement
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileComp"));
 	ProjectileMovement->UpdatedComponent = RootComponent;
@@ -25,6 +31,10 @@ AProjectileBase::AProjectileBase()
 
 	InitialVelocity = FVector::ZeroVector;
 	ProjectileLifepsan = 6.f;
+	DamageTypeClass = nullptr;
+	DirectDamage = 10.f;
+	bDestroyOnHit = true;
+	MaxAmountOfBounces = 0;
 }
 
 // Called when the game starts or when spawned
@@ -39,6 +49,18 @@ void AProjectileBase::BeginPlay()
 void AProjectileBase::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
+
+	CollisionComp->IgnoreActorWhenMoving(this, true);
+
+	if (GetInstigator())
+	{
+		CollisionComp->IgnoreActorWhenMoving(GetInstigator(), true);
+	}
+
+	if (CollisionComp)
+	{
+		CollisionComp->OnComponentHit.AddDynamic(this, &AProjectileBase::OnHit);
+	}
 }
 
 void AProjectileBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -62,5 +84,49 @@ void AProjectileBase::OnRep_InitialVelocity()
 	{
 		ProjectileMovement->Velocity = InitialVelocity;
 	}
+}
+
+void AProjectileBase::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	HandleImpact(Hit);
+}
+
+void AProjectileBase::HandleImpact(const FHitResult& Impact)
+{
+	if (HasAuthority())
+	{
+		MulticastHit(Impact);
+
+		if (Impact.GetActor())
+		{
+			FPointDamageEvent DamageEvent;
+			DamageEvent.DamageTypeClass = DamageTypeClass;
+			DamageEvent.HitInfo = Impact;
+			DamageEvent.ShotDirection = ProjectileMovement->Velocity.GetSafeNormal();
+			DamageEvent.Damage = DirectDamage;
+
+			Impact.GetActor()->TakeDamage(DirectDamage, DamageEvent, GetInstigatorController(), this);
+		}
+
+		if (bDestroyOnHit)
+		{
+			Destroy();
+		}
+		else if (ProjectileMovement && ProjectileMovement->bShouldBounce && MaxAmountOfBounces > 0)
+		{
+			++CurrentAmountOfBounces;
+			if (CurrentAmountOfBounces >= MaxAmountOfBounces)
+			{
+				Destroy();
+			}
+		}
+	}
+}
+
+void AProjectileBase::MulticastHit_Implementation(const FHitResult& Hit)
+{
+#if !UE_SERVER
+
+#endif
 }
 

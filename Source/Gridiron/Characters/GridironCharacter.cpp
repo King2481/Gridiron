@@ -251,7 +251,7 @@ bool AGridironCharacter::Die(float KillingDamage, FDamageEvent const& DamageEven
 	FVector MomentumDir;
 	DamageEvent.GetBestHitInfo(this, EventInstigator, HitInfo, MomentumDir);
 
-	const auto DamageType = DamageEvent.DamageTypeClass->GetDefaultObject<UGridironDamageType>();
+	const auto DamageType = DamageEvent.DamageTypeClass ? DamageEvent.DamageTypeClass->GetDefaultObject<UGridironDamageType>() : nullptr;
 	const float LaunchMagnitude = DamageType ? DamageType->RagdollLaunchMagnitude : 12500.f;
 
 	BroadcastDeath(HitInfo.ImpactPoint, MomentumDir * LaunchMagnitude, HitInfo.BoneName);
