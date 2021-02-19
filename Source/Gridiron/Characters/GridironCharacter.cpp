@@ -14,6 +14,7 @@
 #include "Gridiron/Weapons/GridironDamageType.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Gridiron/Player/GridironPlayerController.h"
 
 // Sets default values
 AGridironCharacter::AGridironCharacter(const FObjectInitializer& ObjectInitializer)
@@ -86,7 +87,7 @@ void AGridironCharacter::InitCharacter()
 		{
 			if (Weapon)
 			{
-				AddItemToInventory(Weapon);
+				AddItemToInventory(Weapon, false);
 			}
 		}
 	}
@@ -363,7 +364,7 @@ void AGridironCharacter::DestroyInventoryItems()
 	Inventory.Empty();
 }
 
-void AGridironCharacter::AddItemToInventory(TSubclassOf<AItemBase> ItemToAdd)
+void AGridironCharacter::AddItemToInventory(TSubclassOf<AItemBase> ItemToAdd, const bool bShowChatNotification /* = true */)
 {
 	if (!ItemToAdd)
 	{
@@ -375,6 +376,20 @@ void AGridironCharacter::AddItemToInventory(TSubclassOf<AItemBase> ItemToAdd)
 	{
 		Item->InitItem(this);
 		Inventory.Add(Item);
+
+		if (bShowChatNotification)
+		{
+			const auto PC = Cast<AGridironPlayerController>(Controller);
+			if (PC)
+			{
+				FTextFormat TextFormat(FText::FromStringTable(TEXT("/Game/UI/Strings/ST_HUD.ST_HUD"), TEXT("ItemNotificationMessage")));
+
+				FFormatNamedArguments Arguments;
+				Arguments.Add(TEXT("ItemName"), Item->ItemName);
+
+				PC->ClientTeamMessage(nullptr, FText::Format(TextFormat, Arguments).ToString(), "");
+			}
+		}
 	}
 }
 

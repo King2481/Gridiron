@@ -67,7 +67,7 @@ public:
 
 	// Adds an item to our inventory
 	UFUNCTION(BlueprintCallable, Category = "Character")
-	void AddItemToInventory(TSubclassOf<AItemBase> ItemToAdd);
+	void AddItemToInventory(TSubclassOf<AItemBase> ItemToAdd, const bool bShowChatNotification = true);
 
 	// Checks to see if an item class exists in our iventory
 	UFUNCTION(BlueprintPure, Category = "Character")
