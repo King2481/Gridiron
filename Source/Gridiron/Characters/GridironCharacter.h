@@ -171,6 +171,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Character")
 	bool IsDashing() const;
 
+	virtual void Landed(const FHitResult& Hit) override;
+
 protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities")
@@ -309,6 +311,31 @@ protected:
 	// Is this character currently dashing?
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Character")
 	bool bIsDashing;
+
+	// How many dash stocks does this character have?
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Character")
+	uint8 CurrentDashStocks;
+
+	// How many dash stocks is this character allowed to have?
+	UPROPERTY(BlueprintReadOnly, Category = "Character")
+	uint8 MaxDashStocks;
+
+	// How long does it take to fully restore your dash stocks?
+	UPROPERTY(BlueprintReadOnly, Category = "Character")
+	float DashStockRestoreTime;
+
+	// Timer handle for restoring.
+	FTimerHandle DashStockRestore_TimerHandle;
+
+	// What happens what the dash stocks are restored
+	void OnDashStockRestoreTimerComplete();
+
+	// Are we pending a dash stock restore?
+	bool bPendingDashStockRestore;
+
+	// What sound is used when the character dashes? (player only)
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Sounds")
+	USoundBase* DashSound;
 
 public:	
 

@@ -42,6 +42,12 @@ AGridironCharacter::AGridironCharacter(const FObjectInitializer& ObjectInitializ
 	bIsAiming = false;
 	bIsSliding = false;
 	bIsDashing = false;
+	CurrentDashStocks = 0;
+	MaxDashStocks = 2;
+	DashStockRestoreTime = 2.5f;
+	bPendingDashStockRestore = false;
+
+	DashSound = nullptr;
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	CameraComponent->SetupAttachment(RootComponent);
@@ -80,6 +86,7 @@ void AGridironCharacter::InitCharacter()
 
 	Health = StartingHealth;
 	Armor = StartingArmor;
+	CurrentDashStocks = MaxDashStocks;
 
 	if (DefaultWeapons.Num() > 0)
 	{
@@ -124,6 +131,7 @@ void AGridironCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 
 	// Owner only
 	DOREPLIFETIME_CONDITION(AGridironCharacter, StoredAmmo, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(AGridironCharacter, CurrentDashStocks, COND_OwnerOnly);
 
 	// Third Parties only
 	DOREPLIFETIME_CONDITION(AGridironCharacter, bIsAiming, COND_SkipOwner);
@@ -136,6 +144,17 @@ void AGridironCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void AGridironCharacter::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	if (bPendingDashStockRestore)
+	{
+		bPendingDashStockRestore = false;
+		CurrentDashStocks = MaxDashStocks;
+	}
 }
 
 float AGridironCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
@@ -654,11 +673,21 @@ bool AGridironCharacter::IsSliding() const
 void AGridironCharacter::StartDash()
 {
 	bIsDashing = true;
+	CurrentDashStocks = FMath::Max<uint8>(CurrentDashStocks - 1, 0);
+
+	GetWorldTimerManager().ClearTimer(DashStockRestore_TimerHandle);
+	GetWorldTimerManager().SetTimer(DashStockRestore_TimerHandle, this, &AGridironCharacter::OnDashStockRestoreTimerComplete, DashStockRestoreTime, false);
 
 	// We _shouldn't_ have to do a server RPC call as this is ability driven, which supports prediction.
 	if (GridironMovement)
 	{
 		GridironMovement->StartDash();
+	}
+
+	const auto PC = Cast<AGridironPlayerController>(Controller);
+	if (PC && PC->IsLocalController())
+	{
+		PC->ClientPlaySound(DashSound);
 	}
 }
 
@@ -674,12 +703,27 @@ void AGridironCharacter::EndDash()
 
 bool AGridironCharacter::CanDash() const
 {
-	return !bIsDashing;
+	return !bIsDashing && CurrentDashStocks > 0;
 }
 
 bool AGridironCharacter::IsDashing() const
 {
 	return bIsDashing;
+}
+
+void AGridironCharacter::OnDashStockRestoreTimerComplete()
+{
+	GetWorldTimerManager().ClearTimer(DashStockRestore_TimerHandle);
+
+	if (GridironMovement && GridironMovement->IsFalling())
+	{
+		// We don't want to restore dash stocks when in the air. Only when grounded, so queue it up.
+		bPendingDashStockRestore = true;
+	}
+	else
+	{ 
+		CurrentDashStocks = MaxDashStocks;
+	}
 }
 
 // Called to bind functionality to input
