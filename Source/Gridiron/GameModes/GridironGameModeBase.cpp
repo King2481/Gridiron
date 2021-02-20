@@ -7,6 +7,9 @@
 #include "Gridiron/Characters/GridironCharacter.h"
 #include "Gridiron/UI/GridironHUD.h"
 #include "Kismet/GameplayStatics.h"
+#include "Gridiron/Teams/TeamInterface.h"
+#include "Gridiron/Teams/TeamInfo.h"
+#include "Gridiron/Teams/TeamDefinition.h"
 
 namespace MatchState
 {
@@ -28,12 +31,109 @@ AGridironGameModeBase::AGridironGameModeBase()
 	UniversalDamageMultiplayer = 1.f;
 	SelfDamageMultiplier = 0.25f;
 	WinningPlayerState = nullptr;
-	WinningTeamId = 255; // TODO: When team interface is implemented, use the InvalidID
+	WinningTeamId = ITeamInterface::InvalidId;
 	RoundTimeLimit = 300; // 5 minutes by default
 	bKillFeed = true;
 
 	bRespawnPlayerOnDeath = true;
 }
+
+void AGridironGameModeBase::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	InitializeTeams();
+}
+
+void AGridironGameModeBase::InitializeTeams()
+{
+	if (TeamsForMode.Num() <= 0)
+	{
+		// No teams to initialize
+		return;
+	}
+
+	const auto GS = GetGameState<AGridironGameState>();
+	if (!GS)
+	{
+		// No GameState available.
+		return;
+	}
+
+	for (int i = 0; i <= TeamsForMode.Num() - 1; i++)
+	{
+		const auto Team = TeamsForMode[i].LoadSynchronous();
+		if (Team)
+		{
+			const auto NewTeam = GetWorld()->SpawnActor<ATeamInfo>(ATeamInfo::StaticClass(), FTransform());
+			if (NewTeam)
+			{
+				NewTeam->InitializeTeam(Team, i);
+				GS->AddTeam(NewTeam, i);
+			}
+		}
+	}
+}
+
+void AGridironGameModeBase::PostLogin(APlayerController* NewPlayer)
+{
+	const auto PC = Cast<AGridironPlayerController>(NewPlayer);
+	const auto PS = Cast<AGridironPlayerState>(NewPlayer->PlayerState);
+	if (PC && PS)
+	{
+		if (TeamsForMode.Num() >= 2)
+		{
+			PC->JoinTeam(ChooseTeam(PS));
+		}
+		else
+		{
+			PC->JoinTeam(ITeamInterface::InvalidId);
+		}
+	}
+
+	Super::PostLogin(NewPlayer);
+}
+
+uint8 AGridironGameModeBase::ChooseTeam(AGridironPlayerState* ForPlayerState) const
+{
+	TArray<int32> TeamBalance;
+	TeamBalance.AddZeroed(TeamsForMode.Num());
+
+	// get current team balance
+	for (int32 i = 0; i < GameState->PlayerArray.Num(); i++)
+	{
+		AGridironPlayerState const* const TestPlayerState = Cast<AGridironPlayerState>(GameState->PlayerArray[i]);
+		if (TestPlayerState && TestPlayerState != ForPlayerState && TeamBalance.IsValidIndex(TestPlayerState->GetTeamId()))
+		{
+			TeamBalance[TestPlayerState->GetTeamId()]++;
+		}
+	}
+
+	// find least populated one
+	int32 BestTeamScore = TeamBalance[0];
+	for (int32 i = 1; i < TeamBalance.Num(); i++)
+	{
+		if (BestTeamScore > TeamBalance[i])
+		{
+			BestTeamScore = TeamBalance[i];
+		}
+	}
+
+	// there could be more than one...
+	TArray<int32> BestTeams;
+	for (int32 i = 0; i < TeamBalance.Num(); i++)
+	{
+		if (TeamBalance[i] == BestTeamScore)
+		{
+			BestTeams.Add(i);
+		}
+	}
+
+	// get random from best list
+	const int32 RandomBestTeam = BestTeams[FMath::RandHelper(BestTeams.Num())];
+	return RandomBestTeam;
+}
+
 
 void AGridironGameModeBase::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {
@@ -135,6 +235,12 @@ float AGridironGameModeBase::OnCharacterTakeDamage(AGridironCharacter* Reciever,
 	if (bSelfDamage)
 	{
 		AlteredDamage *= SelfDamageMultiplier;
+	}
+
+	// Friendly fire specfics check.
+	if (ITeamInterface::IsAlly(Reciever, DamagingCharacter) && bAllowFriendlyFire && !bSelfDamage)
+	{
+		AlteredDamage *= FriendlyFireDamageMultiplier;
 	}
 
 	return AlteredDamage;

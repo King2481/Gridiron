@@ -8,6 +8,8 @@
 
 class AGridironCharacter;
 class AGridironPlayerState;
+class UTeamDefinition;
+class ATeamInfo;
 
 /**
 * Additional match states
@@ -36,6 +38,9 @@ public:
 	// Called when the game is initialized
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 
+	// Called when components have been initialized.
+	virtual void PostInitializeComponents() override;
+
 	// Called when a character is killed.
 	virtual void OnCharacterKilled(AGridironCharacter* Victim, float KillingDamage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
 
@@ -44,6 +49,9 @@ public:
 
 	// Called before a client attempts to join this match
 	virtual void PreLogin(const FString& Options, const FString& Address, const FUniqueNetIdRepl& UniqueId, FString& ErrorMessage) override;
+
+	// Called when a player has logged in.
+	virtual void PostLogin(APlayerController* NewPlayer) override;
 
 	// True if the server requires a password to join 
 	bool IsPasswordProtected() const;
@@ -121,4 +129,14 @@ protected:
 	// When a player is killed, do they respawn? (note: by turning this off, you need custom logic to respawn killed players)
 	UPROPERTY(Config, EditDefaultsOnly, BlueprintReadOnly, Category = "Gamemode")
 	bool bRespawnPlayerOnDeath;
+
+	// Initializes the team for this game mode if there are any.
+	virtual void InitializeTeams();
+
+	// Chooses a team for the player state.
+	virtual uint8 ChooseTeam(AGridironPlayerState* ForPlayerState) const;
+
+	// What teams are in this mode?
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gamemode")
+	TArray<TSoftObjectPtr<UTeamDefinition>> TeamsForMode;
 };

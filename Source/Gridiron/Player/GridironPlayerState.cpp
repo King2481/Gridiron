@@ -6,6 +6,11 @@
 
 AGridironPlayerState::AGridironPlayerState()
 {
+	TeamId = ITeamInterface::InvalidId;
+}
+
+void AGridironPlayerState::OnRep_TeamId()
+{
 
 }
 
@@ -15,6 +20,17 @@ void AGridironPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 
 	// Replicate to everyone
 	DOREPLIFETIME(AGridironPlayerState, MatchStats);
+	DOREPLIFETIME(AGridironPlayerState, TeamId);
+}
+
+uint8 AGridironPlayerState::GetTeamId() const
+{
+	return TeamId;
+}
+
+void AGridironPlayerState::SetTeamId(uint8 NewTeam)
+{
+	TeamId = NewTeam;
 }
 
 FMatchStats AGridironPlayerState::GetMatchStats() const

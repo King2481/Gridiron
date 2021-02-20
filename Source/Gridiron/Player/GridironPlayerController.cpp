@@ -6,6 +6,8 @@
 #include "Gridiron/UI/GridironHUD.h"
 #include "Kismet/GameplayStatics.h"
 #include "Gridiron/GameModes/GridironGameModeBase.h"
+#include "Gridiron/GameModes/GridironGameState.h"
+#include "Gridiron/Characters/GridironCharacter.h"
 
 AGridironPlayerController::AGridironPlayerController()
 {
@@ -154,4 +156,41 @@ void AGridironPlayerController::OnQueueRespawnDelayFinished()
 {
 	GetWorldTimerManager().ClearTimer(DelayRespawn_TimerHandle);
 	RespawnPlayer();
+}
+
+uint8 AGridironPlayerController::GetTeamId() const
+{
+	const auto PS = Cast<AGridironPlayerState>(PlayerState);
+	return PS ? PS->GetTeamId() : ITeamInterface::InvalidId;
+}
+
+void AGridironPlayerController::JoinTeam(uint8 NewTeam)
+{
+	const auto World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	const auto GS = Cast<AGridironGameState>(World->GetGameState());
+	const auto PS = Cast<AGridironPlayerState>(PlayerState);
+
+	if (NewTeam != ITeamInterface::InvalidId)
+	{
+		if (GS && PS)
+		{
+			GS->AddPlayerForTeam(PS, NewTeam);
+		}
+	}
+}
+
+void AGridironPlayerController::SetPawn(APawn* InPawn)
+{
+	Super::SetPawn(InPawn);
+
+	const auto NewCharacter = Cast<AGridironCharacter>(InPawn);
+	if (NewCharacter)
+	{
+		NewCharacter->SetTeamId(GetTeamId());
+	}
 }

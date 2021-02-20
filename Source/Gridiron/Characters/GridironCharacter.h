@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Gridiron/Items/EquipableEnums.h"
 #include "Gridiron/Weapons/WeaponEnums.h"
+#include "Gridiron/Teams/TeamInterface.h"
 #include "GridironCharacter.generated.h"
 
 class UAbilitySystemComponent;
@@ -40,7 +41,7 @@ struct FStoredAmmo
 };
 
 UCLASS()
-class GRIDIRON_API AGridironCharacter : public ACharacter
+class GRIDIRON_API AGridironCharacter : public ACharacter, public ITeamInterface
 {
 	GENERATED_BODY()
 
@@ -171,9 +172,23 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Character")
 	bool IsDashing() const;
 
+	// Called when the character has landed
 	virtual void Landed(const FHitResult& Hit) override;
 
+	// Returns the Team Id for this character
+	virtual uint8 GetTeamId() const override;
+
+	// Sets the Team Id for this character
+	void SetTeamId(const uint8 NewTeamId);
+
 protected:
+
+	// What team does this character belong to?
+	UPROPERTY(Replicated, ReplicatedUsing = OnRep_TeamId, BlueprintReadOnly, Category = "Character")
+	uint8 TeamId;
+
+	UFUNCTION()
+	void OnRep_TeamId();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities")
 	UAbilitySystemComponent* AbilitySystemComponent;

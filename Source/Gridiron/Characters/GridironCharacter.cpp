@@ -46,6 +46,7 @@ AGridironCharacter::AGridironCharacter(const FObjectInitializer& ObjectInitializ
 	MaxDashStocks = 2;
 	DashStockRestoreTime = 2.5f;
 	bPendingDashStockRestore = false;
+	TeamId = ITeamInterface::InvalidId;
 
 	DashSound = nullptr;
 
@@ -128,6 +129,7 @@ void AGridironCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	DOREPLIFETIME(AGridironCharacter, bIsDying);
 	DOREPLIFETIME(AGridironCharacter, CurrentEquipable)
 	DOREPLIFETIME(AGridironCharacter, Inventory);
+	DOREPLIFETIME(AGridironCharacter, TeamId);
 
 	// Owner only
 	DOREPLIFETIME_CONDITION(AGridironCharacter, StoredAmmo, COND_OwnerOnly);
@@ -333,6 +335,11 @@ void AGridironCharacter::OnRep_Inventory()
 }
 
 void AGridironCharacter::OnRep_CurrentEquipable()
+{
+
+}
+
+void AGridironCharacter::OnRep_TeamId()
 {
 
 }
@@ -724,6 +731,16 @@ void AGridironCharacter::OnDashStockRestoreTimerComplete()
 	{ 
 		CurrentDashStocks = MaxDashStocks;
 	}
+}
+
+uint8 AGridironCharacter::GetTeamId() const
+{
+	return TeamId;
+}
+
+void AGridironCharacter::SetTeamId(const uint8 NewTeamId)
+{
+	TeamId = NewTeamId;
 }
 
 // Called to bind functionality to input

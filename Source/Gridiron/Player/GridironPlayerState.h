@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "Gridiron/Teams/TeamInterface.h"
 #include "GridironPlayerState.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnMatchStatsUpdatedDelegate);
@@ -37,7 +38,7 @@ struct FMatchStats
  * 
  */
 UCLASS()
-class GRIDIRON_API AGridironPlayerState : public APlayerState
+class GRIDIRON_API AGridironPlayerState : public APlayerState, public ITeamInterface
 {
 	GENERATED_BODY()
 
@@ -58,7 +59,20 @@ public:
 	// Scores a death, must be called on auth to replicate.
 	void ScoreDeath(int32 Amount = 1);
 
+	// Returns the TeamId (based on PlayerStates TeamId)
+	virtual uint8 GetTeamId() const override;
+
+	// Sets the team ID for the Player State.
+	void SetTeamId(uint8 NewTeam);
+
 protected:
+
+	// What team does this character belong to?
+	UPROPERTY(Replicated, ReplicatedUsing = OnRep_TeamId, BlueprintReadOnly, Category = "Character")
+	uint8 TeamId;
+
+	UFUNCTION()
+	void OnRep_TeamId();
 
 	// Function for replication setup.
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

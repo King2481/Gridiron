@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "Gridiron/Teams/TeamInterface.h"
 #include "GridironPlayerController.generated.h"
 
 class AGridironPlayerState;
@@ -14,7 +15,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRoundWonDelegate, AGridironPlaye
  * 
  */
 UCLASS()
-class GRIDIRON_API AGridironPlayerController : public APlayerController
+class GRIDIRON_API AGridironPlayerController : public APlayerController, public ITeamInterface
 {
 	GENERATED_BODY()
 
@@ -68,6 +69,15 @@ public:
 	// Queues a respawn with a delay.
 	UFUNCTION(BlueprintCallable, Category = "Player Controller")
 	void QueueRespawnDelay(float Delay);
+
+	// Setter for the pawn.
+	virtual void SetPawn(APawn* InPawn) override;
+
+	// Joins the specified team
+	void JoinTeam(uint8 NewTeam);
+
+	// Returns the Team ID for the controller
+	virtual uint8 GetTeamId() const override;
 
 protected:
 
