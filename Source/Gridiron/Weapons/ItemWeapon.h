@@ -7,6 +7,8 @@
 #include "Gridiron/Weapons/WeaponEnums.h"
 #include "ItemWeapon.generated.h"
 
+class USurfaceReaction;
+
 DECLARE_LOG_CATEGORY_EXTERN(LogWeapon, Log, Verbose);
 
 /**
@@ -97,4 +99,8 @@ protected:
 	// Maping for damage multiplier, use this if you want specific bonuses/penalties to apply when a weapon does damage against something.
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Weapon")
 	TMap<UPhysicalMaterial*, float> DamageMultiplierMap;
+
+	// What surface reaction does this weapon uses when it hits something.
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Weapon")
+	TSubclassOf<USurfaceReaction> SurfaceReaction;
 };

@@ -8,6 +8,7 @@
 
 class USphereComponent;
 class UProjectileMovementComponent;
+class USurfaceReaction;
 
 UCLASS()
 class GRIDIRON_API AProjectileBase : public AActor
@@ -81,5 +82,9 @@ protected:
 
 	// Called to handle the projectile hit
 	virtual void HandleImpact(const FHitResult& Impact);
+
+	// What surface reaction does this weapon uses when it hits something.
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Projectile")
+	TSubclassOf<USurfaceReaction> SurfaceReaction;
 
 };

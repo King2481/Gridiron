@@ -11,6 +11,7 @@
 #include "Gridiron/GameModes/GridironGameModeBase.h"
 #include "Gridiron/Weapons/Projectiles/ProjectileBase.h"
 #include "Gridiron/Engine/GameTraceChannels.h"
+#include "Gridiron/FX/SurfaceReaction.h"
 
 #if !UE_BUILD_SHIPPING
 static TAutoConsoleVariable<int32> CvarShowWeaponTraces(TEXT("DebugWeaponTraces"), 0, TEXT("Visualise Firearm Traces"));
@@ -351,7 +352,38 @@ void AItemFirearm::ConfirmedFirearmHit(const FStoredFirearmHit& Hit)
 void AItemFirearm::MulticastSpawnFXForHits_Implementation(const TArray<FStoredFirearmHit>& Hits)
 {
 #if !UE_SERVER
+	if (!SurfaceReaction)
+	{
+		return;
+	}
 
+	const auto SurfaceReactionInst = SurfaceReaction.GetDefaultObject();
+	if (!SurfaceReactionInst)
+	{
+		return;
+	}
+
+	for (auto& Hit : Hits)
+	{
+		if (!Hit.HitActor.IsValid())
+		{
+			continue;
+		}
+
+		// TODO: This could be optimized by having sound cutoff distance / not rendering particles for things that are not being rendered.
+
+		FSurfaceReactionInfo Info = SurfaceReactionInst->GetSurfaceReactionFromHit(Hit.PhysMaterial);
+
+		if (Info.ReactionSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, Info.ReactionSound, Hit.ImpactPoint);
+		}
+
+		if (Info.ReactionEffect)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Info.ReactionEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+		}
+	}
 #endif
 }
 

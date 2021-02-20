@@ -6,6 +6,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
+#include "Gridiron/FX/SurfaceReaction.h"
 
 // Sets default values
 AProjectileBase::AProjectileBase()
@@ -35,6 +36,7 @@ AProjectileBase::AProjectileBase()
 	DirectDamage = 10.f;
 	bDestroyOnHit = true;
 	MaxAmountOfBounces = 0;
+	SurfaceReaction = nullptr;
 }
 
 // Called when the game starts or when spawned
@@ -126,7 +128,28 @@ void AProjectileBase::HandleImpact(const FHitResult& Impact)
 void AProjectileBase::MulticastHit_Implementation(const FHitResult& Hit)
 {
 #if !UE_SERVER
+	if (!SurfaceReaction)
+	{
+		return;
+	}
 
+	const auto SurfaceReactionInst = SurfaceReaction.GetDefaultObject();
+	if (!SurfaceReactionInst)
+	{
+		return;
+	}
+
+	FSurfaceReactionInfo Info = SurfaceReactionInst->GetSurfaceReactionFromHit(Hit.PhysMaterial);
+
+	if (Info.ReactionSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, Info.ReactionSound, Hit.ImpactPoint);
+	}
+
+	if (Info.ReactionEffect)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Info.ReactionEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+	}
 #endif
 }
 

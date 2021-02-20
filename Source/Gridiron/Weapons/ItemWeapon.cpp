@@ -23,6 +23,7 @@ AItemWeapon::AItemWeapon()
 	MinAmmoRequiredToShoot = 1;
 	StartingAmmo = 0;
 	bConsumesAmmo = true;
+	SurfaceReaction = nullptr;
 }
 
 void AItemWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifetimeProps) const
