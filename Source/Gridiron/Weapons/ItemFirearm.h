@@ -289,4 +289,16 @@ protected:
 	// What is the muzzle socket name for this weapon?
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Firearm")
 	FName MuzzleSocketName;
+
+	// What is the fire sound for first person?
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Sounds")
+	USoundBase* FirstPersonFireSound;
+
+	// What is the fire sound for third person?
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Sounds")
+	USoundBase* ThirdPersonFireSound;
+
+	// What is the fire sound for dry firing (local only)
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Sounds")
+	USoundBase* DryFireSound;
 };

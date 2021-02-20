@@ -34,6 +34,10 @@ AItemFirearm::AItemFirearm()
 	CycleFinishTime = -1.f;
 
 	StartingAmmo = 10;
+
+	FirstPersonFireSound = nullptr;
+	ThirdPersonFireSound = nullptr;
+	DryFireSound = nullptr;
 }
 
 void AItemFirearm::Tick(float DeltaTime)
@@ -75,6 +79,11 @@ void AItemFirearm::OnTriggerPressed()
 	if (AllowFire())
 	{
 		FireWeapon();
+	}
+	else if (IsPawnOwnerLocallyControlled() && Ammo <= 0)
+	{
+		const FVector Location = PawnOwner ? PawnOwner->GetActorLocation() : GetActorLocation(); // We do this as if we just use the firearm actors location, the sound will be stronger on the right speaker
+		PlayWeaponSoundAtLocation(DryFireSound, Location);
 	}
 }
 
@@ -157,6 +166,8 @@ void AItemFirearm::FireBullets()
 
 			ProcessInstantHits(StoredHits);
 		}
+
+		PlayWeaponSoundAtLocation(FirstPersonFireSound, GetActorLocation());
 	}
 
 	if (!GetWorld())
@@ -206,6 +217,8 @@ void AItemFirearm::MulticastFireBullets_Implementation()
 	{
 		return;
 	}
+
+	PlayWeaponSoundAtLocation(ThirdPersonFireSound, GetActorLocation());
 #endif
 }
 
