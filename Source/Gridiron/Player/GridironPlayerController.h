@@ -61,6 +61,14 @@ public:
 	void ClientPlaySound2D(USoundBase* SoundToPlay);
 	void ClientPlaySound2D_Implementation(USoundBase* SoundToPlay);
 
+	// Respawns the player, if applicable.
+	UFUNCTION(BlueprintCallable, Category = "Player Controller")
+	void RespawnPlayer();
+
+	// Queues a respawn with a delay.
+	UFUNCTION(BlueprintCallable, Category = "Player Controller")
+	void QueueRespawnDelay(float Delay);
+
 protected:
 
 	// Called when we want to start a chat
@@ -78,4 +86,10 @@ protected:
 	// Updates the players input mode, we may want different input modes such as Game / UI / Game & UI
 	void UpdateInputMode();
 	
+	UPROPERTY()
+	FTimerHandle DelayRespawn_TimerHandle;
+
+	// Called when we QueueRespawnDelay() is finished
+	void OnQueueRespawnDelayFinished();
+
 };

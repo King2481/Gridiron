@@ -5,6 +5,7 @@
 #include "Gridiron/Player/GridironPlayerState.h"
 #include "Gridiron/UI/GridironHUD.h"
 #include "Kismet/GameplayStatics.h"
+#include "Gridiron/GameModes/GridironGameModeBase.h"
 
 AGridironPlayerController::AGridironPlayerController()
 {
@@ -124,4 +125,33 @@ void AGridironPlayerController::ClientPlaySound2D_Implementation(USoundBase* Sou
 	{
 		UGameplayStatics::PlaySound2D(this, SoundToPlay);
 	}
+}
+
+void AGridironPlayerController::RespawnPlayer()
+{
+	if (GetPawn())
+	{
+		return;
+	}
+
+	auto GM = GetWorld()->GetAuthGameMode<AGridironGameModeBase>();
+	if (GM)
+	{
+		AActor* PlayerStart = GM->ChoosePlayerStart(this);
+		if (PlayerStart)
+		{
+			GM->RestartPlayerAtPlayerStart(this, PlayerStart);
+		}
+	}
+}
+
+void AGridironPlayerController::QueueRespawnDelay(float Delay)
+{
+	GetWorldTimerManager().SetTimer(DelayRespawn_TimerHandle, this, &AGridironPlayerController::OnQueueRespawnDelayFinished, Delay);
+}
+
+void AGridironPlayerController::OnQueueRespawnDelayFinished()
+{
+	GetWorldTimerManager().ClearTimer(DelayRespawn_TimerHandle);
+	RespawnPlayer();
 }

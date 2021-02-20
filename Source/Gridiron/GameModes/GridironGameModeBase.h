@@ -118,4 +118,7 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Gamemode")
 	void TeamWin(const uint8 NewWinningTeam);
 
+	// When a player is killed, do they respawn? (note: by turning this off, you need custom logic to respawn killed players)
+	UPROPERTY(Config, EditDefaultsOnly, BlueprintReadOnly, Category = "Gamemode")
+	bool bRespawnPlayerOnDeath;
 };

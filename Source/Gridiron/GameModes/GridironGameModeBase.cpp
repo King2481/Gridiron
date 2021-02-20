@@ -31,6 +31,8 @@ AGridironGameModeBase::AGridironGameModeBase()
 	WinningTeamId = 255; // TODO: When team interface is implemented, use the InvalidID
 	RoundTimeLimit = 300; // 5 minutes by default
 	bKillFeed = true;
+
+	bRespawnPlayerOnDeath = true;
 }
 
 void AGridironGameModeBase::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
@@ -103,6 +105,22 @@ void AGridironGameModeBase::OnCharacterKilled(AGridironCharacter* Victim, float 
 	}
 
 	BlueprintOnCharacterKilled(Victim, KillingDamage, DamageEvent, EventInstigator, DamageCauser);
+
+	if (bRespawnPlayerOnDeath)
+	{
+		const auto VictimPC = Cast<AGridironPlayerController>(Victim->GetController());
+		if (VictimPC)
+		{
+			if (MinRespawnDelay > FLT_EPSILON)
+			{
+				VictimPC->QueueRespawnDelay(MinRespawnDelay);
+			}
+			else
+			{
+				VictimPC->RespawnPlayer();
+			}
+		}
+	}
 }
 
 float AGridironGameModeBase::OnCharacterTakeDamage(AGridironCharacter* Reciever, float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) const
