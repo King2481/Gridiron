@@ -30,16 +30,18 @@ AGridironGameModeBase::AGridironGameModeBase()
 	WinningPlayerState = nullptr;
 	WinningTeamId = 255; // TODO: When team interface is implemented, use the InvalidID
 	RoundTimeLimit = 300; // 5 minutes by default
+	bKillFeed = true;
 }
 
 void AGridironGameModeBase::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {
 	Super::InitGame(MapName, Options, ErrorMessage);
 
-	RoundTimeLimit = UGameplayStatics::GetIntOption(Options, TEXT("RoundTimeLimit"), RoundTimeLimit);
+	RoundTimeLimit = UGameplayStatics::GetIntOption(Options, TEXT("RoundTimeLimit"), RoundTimeLimit) * 60; // Multiply the get it in seconds as the game counts seconds.
+	bKillFeed = UGameplayStatics::GetIntOption(Options, TEXT("KillFeed"), bKillFeed) > 0;
 
 	// Password
-	ServerPassword = UGameplayStatics::ParseOption(Options, TEXT("Password="));
+	ServerPassword = UGameplayStatics::ParseOption(Options, TEXT("Password"));
 	if (!ServerPassword.IsEmpty())
 	{
 		UE_LOG(LogGameMode, Display, TEXT("Server is now password protected!"));

@@ -88,6 +88,10 @@ public:
 	// Password required to connect to the server 
 	FString ServerPassword;
 
+	// Is the killfeed enabled?
+	UPROPERTY(Config, BlueprintReadOnly, Category = "Gamemode")
+	bool bKillFeed;
+
 	// How long does this game mode last, in seconds?
 	UPROPERTY(Config, BlueprintReadOnly, Category = "Gamemode")
 	int32 RoundTimeLimit;
