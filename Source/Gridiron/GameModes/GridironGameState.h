@@ -49,6 +49,6 @@ public:
 protected:
 
 	// What teams have been created and are currently in play?
-	UPROPERTY(BlueprintReadOnly, Replicated, Category = "Gamemode")
+	UPROPERTY(BlueprintReadOnly, Replicated, Category = "Game State")
 	TArray<ATeamInfo*> Teams;
 };

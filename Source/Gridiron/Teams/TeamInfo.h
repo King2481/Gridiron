@@ -43,6 +43,9 @@ public:
 	// Adds a player to this team.
 	void AddPlayer(AGridironPlayerState* NewPlayer);
 
+	// Returns the team color
+	FColor GetTeamColor() const;
+
 protected:
 
 	// What team does this character belong to?

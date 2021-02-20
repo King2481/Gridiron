@@ -352,6 +352,8 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Sounds")
 	USoundBase* DashSound;
 
+	void UpdateBodyColor();
+
 public:	
 
 	// Called every frame

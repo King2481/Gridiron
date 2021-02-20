@@ -15,6 +15,8 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Gridiron/Player/GridironPlayerController.h"
+#include "Gridiron/GameModes/GridironGameState.h"
+#include "Gridiron/Teams/TeamInfo.h"
 
 // Sets default values
 AGridironCharacter::AGridironCharacter(const FObjectInitializer& ObjectInitializer)
@@ -341,7 +343,7 @@ void AGridironCharacter::OnRep_CurrentEquipable()
 
 void AGridironCharacter::OnRep_TeamId()
 {
-
+	UpdateBodyColor();
 }
 
 bool AGridironCharacter::IsAtOrBeyondMaxHealth() const
@@ -741,6 +743,34 @@ uint8 AGridironCharacter::GetTeamId() const
 void AGridironCharacter::SetTeamId(const uint8 NewTeamId)
 {
 	TeamId = NewTeamId;
+
+	UpdateBodyColor();
+}
+
+void AGridironCharacter::UpdateBodyColor()
+{
+	if (TeamId == ITeamInterface::InvalidId)
+	{
+		return;
+	}
+
+	const auto GS = GetWorld()->GetGameState<AGridironGameState>();
+	if (!GS)
+	{
+		return;
+	}
+
+	const auto Team = GS->GetTeamFromId(TeamId);
+	if (!Team)
+	{
+		return;
+	}
+
+	const auto DynamicMaterialInst = GetMesh()->CreateDynamicMaterialInstance(0);
+	if (DynamicMaterialInst)
+	{
+		DynamicMaterialInst->SetVectorParameterValue(FName("BodyColor"), Team->GetTeamColor());
+	}
 }
 
 // Called to bind functionality to input

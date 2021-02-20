@@ -10,6 +10,7 @@
 ATeamInfo::ATeamInfo()
 {
 	bReplicates = true;
+	bAlwaysRelevant = true;
 	TeamId = ITeamInterface::InvalidId;
 	TeamDefinition = nullptr;
 	TeamScore = 0;
@@ -65,5 +66,10 @@ void ATeamInfo::AddPlayer(AGridironPlayerState* NewPlayer)
 void ATeamInfo::OnRep_Players()
 {
 	OnPlayersArrayUpdatedDelegate.Broadcast();
+}
+
+FColor ATeamInfo::GetTeamColor() const
+{
+	return TeamDefinition ? TeamDefinition->TeamColor : FColor::White;
 }
 
