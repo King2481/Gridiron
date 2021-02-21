@@ -108,11 +108,15 @@ public:
 
 	// Grants a gameplay ability
 	UFUNCTION(BlueprintCallable, Category = "Character")
-	void GiveCharacterAbility(TSubclassOf<UGridironGameplayAbility> Ability);
+	void GiveCharacterAbility(TSubclassOf<UGridironGameplayAbility> Ability, const bool bActivate = false);
 
 	// Removes a gameplay ability
 	UFUNCTION(BlueprintCallable, Category = "Character")
 	void RemoveCharacterAbility(TSubclassOf<UGridironGameplayAbility> Ability);
+
+	// Does this character have this gameplay tag
+	UFUNCTION(BlueprintPure, Category = "Character")
+	bool IsGameplayCueActive(const FName& TagName) const;
 
 	// Adds additional ammo for the specified ammo type.
 	UFUNCTION(BlueprintCallable, Category = "Character")

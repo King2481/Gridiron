@@ -231,10 +231,21 @@ float AGridironGameModeBase::OnCharacterTakeDamage(AGridironCharacter* Reciever,
 	const auto DamagerController = EventInstigator;
 	const bool bSelfDamage = DamagedController == DamagerController;
 	const auto DamagingCharacter = Cast<AGridironCharacter>(EventInstigator->GetPawn());
+	
+	bool bHasQuad = false;
+	if (DamagingCharacter && DamagingCharacter->IsGameplayCueActive(FName("Powerup.QuadDamage")))
+	{
+		bHasQuad = true;
+	}
 
 	if (bSelfDamage)
 	{
 		AlteredDamage *= SelfDamageMultiplier;
+	}
+
+	if (bHasQuad && !bSelfDamage)
+	{
+		AlteredDamage *= 4.f;
 	}
 
 	// Friendly fire specfics check.

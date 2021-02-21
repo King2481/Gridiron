@@ -577,7 +577,7 @@ int32 AGridironCharacter::GetAmmoAmountForType(EAmmoType AmmoType) const
 	return Amount;
 }
 
-void AGridironCharacter::GiveCharacterAbility(TSubclassOf<UGridironGameplayAbility> Ability)
+void AGridironCharacter::GiveCharacterAbility(TSubclassOf<UGridironGameplayAbility> Ability, const bool bActivate /* = false */)
 {
 	if (!HasAuthority())
 	{
@@ -587,6 +587,11 @@ void AGridironCharacter::GiveCharacterAbility(TSubclassOf<UGridironGameplayAbili
 	if (Ability)
 	{
 		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(Ability, 0, static_cast<int32>(Ability.GetDefaultObject()->InputID), this));
+
+		if (bActivate)
+		{
+			AbilitySystemComponent->TryActivateAbilityByClass(Ability);
+		}
 	}
 }
 
@@ -609,6 +614,11 @@ void AGridironCharacter::RemoveCharacterAbility(TSubclassOf<UGridironGameplayAbi
 			}
 		}
 	}
+}
+
+bool AGridironCharacter::IsGameplayCueActive(const FName& TagName) const
+{
+	return AbilitySystemComponent && AbilitySystemComponent->IsGameplayCueActive(FGameplayTag::RequestGameplayTag(TagName));
 }
 
 void AGridironCharacter::SetIsAiming(const bool bNewAiming)
