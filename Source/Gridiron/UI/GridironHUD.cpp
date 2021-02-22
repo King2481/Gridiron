@@ -37,6 +37,17 @@ void AGridironHUD::SetupHUD()
 #if !UE_SERVER
 	CreateGameHUD();
 	CreateChatBoxWidget();
+
+	const auto PC = Cast<AGridironPlayerController>(GetOwningPlayerController());
+	if (PC)
+	{
+		// The player controller needs to construct its specific widgets.
+		PC->ConstructWidgets();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Error, could not construct PlayerController specific widgets."));
+	}
 #endif
 }
 

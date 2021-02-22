@@ -8,6 +8,7 @@
 #include "GridironPlayerController.generated.h"
 
 class AGridironPlayerState;
+class UUserWidget;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRoundWonDelegate, AGridironPlayerState*, WinningPlayerState, uint8, WinningTeam);
 
@@ -22,6 +23,9 @@ class GRIDIRON_API AGridironPlayerController : public APlayerController, public 
 public:
 
 	AGridironPlayerController();
+
+	// Handles construction of widgets that are handled by the player controller.
+	void ConstructWidgets();
 
 	virtual void SetupInputComponent() override;
 
@@ -81,14 +85,43 @@ public:
 
 protected:
 
+	// Called when we want to open the in game menu
+	void ToggleInGameMenu();
+
+	// Shows/Hide in game menu based on the argument passed.
+	UFUNCTION(BlueprintCallable, Category = "Player Controller")
+	void SetShowInGameMenu(const bool NewIsInGameMenu);
+
+	// Is this player looking at the in game menu?
+	bool bIsInGameMenu;
+
+	// Pointer to the InGameMenu Widget
+	UPROPERTY(BlueprintReadOnly, Category = "Widgets")
+	UUserWidget* InGameMenuWidget;
+
+	// The class to use for the creation of the InGameMenu Widget
+	UPROPERTY(BlueprintReadOnly, Category = "Widgets")
+	TSubclassOf<UUserWidget> InGameMenuWidgetClass;
+
+	// Called when we want to show the scoreboard
+	void ShowScoreboard();
+
+	// Called when we want to hide the scoreboard
+	void HideScoreboard();
+
+	// Pointer to the Scoreboard Widget
+	UPROPERTY(BlueprintReadOnly, Category = "Widgets")
+	UUserWidget* ScoreboardWidget;
+
+	// The class to use for the creation of the InGameMenu Widget
+	UPROPERTY(BlueprintReadOnly, Category = "Widgets")
+	TSubclassOf<UUserWidget> ScoreboardWidgetClass;
+
 	// Called when we want to start a chat
 	void StartChat();
 
 	// Is this player currently inputing text?
 	bool bIsChatting;
-
-	// Is this player looking at the in game menu?
-	bool bIsInGameMenu;
 
 	// Is this player looking at the scoreboard?
 	bool bIsLookingAtScoreboard;

@@ -8,12 +8,62 @@
 #include "Gridiron/GameModes/GridironGameModeBase.h"
 #include "Gridiron/GameModes/GridironGameState.h"
 #include "Gridiron/Characters/GridironCharacter.h"
+#include "Blueprint/UserWidget.h"
 
 AGridironPlayerController::AGridironPlayerController()
 {
 	bIsChatting = false;
 	bIsInGameMenu = false;
 	bIsLookingAtScoreboard = false;
+
+	InGameMenuWidget = nullptr;
+	ScoreboardWidget = nullptr;
+
+#if UE_SERVER
+	InGameMenuWidgetClass = nullptr;
+	ScoreboardWidgetClass = nullptr;
+#else
+	// InGameMenu
+	static ConstructorHelpers::FClassFinder<UUserWidget> InGameMenuWidgetFinder(TEXT("/Game/UI/Widgets/HUD/BP_InGameMenu"));
+	InGameMenuWidgetClass = InGameMenuWidgetFinder.Succeeded() ? InGameMenuWidgetFinder.Class : nullptr;
+
+	// Scoreboard
+	static ConstructorHelpers::FClassFinder<UUserWidget> ScoreboardWidgetFinder(TEXT("/Game/UI/Widgets/HUD/Scoreboard/BP_Scoreboard"));
+	ScoreboardWidgetClass = ScoreboardWidgetFinder.Class;
+#endif
+}
+
+void AGridironPlayerController::ConstructWidgets()
+{
+	if (InGameMenuWidgetClass)
+	{
+		InGameMenuWidget = CreateWidget<UUserWidget>(this, InGameMenuWidgetClass);
+		if (InGameMenuWidget)
+		{
+			// We add to viewport then hide.
+			InGameMenuWidget->AddToViewport(1);
+			InGameMenuWidget->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Error, attempted to create InGameMenu widget, but InGameMenu class is null"));
+	}
+
+	if (ScoreboardWidgetClass)
+	{
+		ScoreboardWidget = CreateWidget<UUserWidget>(this, ScoreboardWidgetClass);
+		if (ScoreboardWidget)
+		{
+			// We add to viewport then hide.
+			ScoreboardWidget->AddToViewport();
+			ScoreboardWidget->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Error, attempted to create Scoreboard widget, but Scoreboard class is null"));
+	}
 }
 
 void AGridironPlayerController::SetupInputComponent()
@@ -21,6 +71,10 @@ void AGridironPlayerController::SetupInputComponent()
 	Super::SetupInputComponent();
 
 	InputComponent->BindAction("StartChat", IE_Pressed, this, &AGridironPlayerController::StartChat);
+	InputComponent->BindAction("InGameMenu", IE_Pressed, this, &AGridironPlayerController::ToggleInGameMenu);
+
+	InputComponent->BindAction("Scoreboard", IE_Pressed, this, &AGridironPlayerController::ShowScoreboard);
+	InputComponent->BindAction("Scoreboard", IE_Released, this, &AGridironPlayerController::HideScoreboard);
 }
 
 void AGridironPlayerController::StartChat()
@@ -87,6 +141,48 @@ void AGridironPlayerController::OnChatInputEnded()
 {
 	bIsChatting = false;
 	UpdateInputMode();
+}
+
+void AGridironPlayerController::ToggleInGameMenu()
+{
+	SetShowInGameMenu(!bIsInGameMenu);
+}
+
+void AGridironPlayerController::SetShowInGameMenu(const bool NewIsInGameMenu)
+{
+	if (InGameMenuWidget)
+	{
+		bIsInGameMenu = NewIsInGameMenu;
+
+		const ESlateVisibility Visibility = bIsInGameMenu ? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed;
+		InGameMenuWidget->SetVisibility(Visibility);
+
+		UpdateInputMode();
+	}
+}
+
+void AGridironPlayerController::ShowScoreboard()
+{
+	if (ScoreboardWidget)
+	{
+		bIsLookingAtScoreboard = true;
+
+		ScoreboardWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
+		UpdateInputMode();
+	}
+}
+
+void AGridironPlayerController::HideScoreboard()
+{
+	if (ScoreboardWidget)
+	{
+		bIsLookingAtScoreboard = false;
+
+		ScoreboardWidget->SetVisibility(ESlateVisibility::Collapsed);
+
+		UpdateInputMode();
+	}
 }
 
 void AGridironPlayerController::UpdateInputMode()
