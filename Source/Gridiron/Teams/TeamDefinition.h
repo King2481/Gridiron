@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable)
 class GRIDIRON_API UTeamDefinition : public UDataAsset
 {
 	GENERATED_BODY()
