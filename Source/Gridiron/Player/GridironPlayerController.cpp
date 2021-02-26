@@ -306,3 +306,11 @@ void AGridironPlayerController::SetPawn(APawn* InPawn)
 		NewCharacter->SetTeamId(GetTeamId());
 	}
 }
+
+void AGridironPlayerController::ClientStartCameraFade_Implementation(float FromAlpha, float ToAlpha, float Duration, const FLinearColor& Color, bool bShouldFadeAudio, bool bHoldWhenFinished)
+{
+	if (PlayerCameraManager)
+	{
+		PlayerCameraManager->StartCameraFade(FromAlpha, ToAlpha, Duration, Color, bShouldFadeAudio, bHoldWhenFinished);
+	}
+}

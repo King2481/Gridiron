@@ -62,7 +62,7 @@ public:
 	FOnRoundWonDelegate OnRoundWonDelegate;
 
 	// Will play a sound only this player will hear
-	UFUNCTION(Client, Reliable)
+	UFUNCTION(BlueprintCallable, Client, Reliable, Category = "Player Controller")
 	void ClientPlaySound2D(USoundBase* SoundToPlay);
 	void ClientPlaySound2D_Implementation(USoundBase* SoundToPlay);
 
@@ -82,6 +82,11 @@ public:
 
 	// Returns the Team ID for the controller
 	virtual uint8 GetTeamId() const override;
+
+	// Changes a camera fade
+	UFUNCTION(BlueprintCallable, Client, Reliable, Category = "Player Controller")
+	void ClientStartCameraFade(float FromAlpha, float ToAlpha, float Duration, const FLinearColor& Color, bool bShouldFadeAudio, bool bHoldWhenFinished);
+	void ClientStartCameraFade_Implementation(float FromAlpha, float ToAlpha, float Duration, const FLinearColor& Color, bool bShouldFadeAudio, bool bHoldWhenFinished);
 
 protected:
 
