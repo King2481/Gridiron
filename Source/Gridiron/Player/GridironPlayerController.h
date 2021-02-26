@@ -36,9 +36,9 @@ public:
 
 	// Server RPC to send chat messages.
 	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerSendChatMessage(const FText& Message);
-	void ServerSendChatMessage_Implementation(const FText& Message);
-	bool ServerSendChatMessage_Validate(const FText& Message);
+	void ServerSendChatMessage(const FText& Message, const bool bTeamMessage);
+	void ServerSendChatMessage_Implementation(const FText& Message, const bool bTeamMessage);
+	bool ServerSendChatMessage_Validate(const FText& Message, const bool bTeamMessage);
 
 	// Called when the chatbox has popped up and text input is allowed
 	void OnChatInputStarted();
@@ -119,6 +119,9 @@ protected:
 
 	// Called when we want to start a chat
 	void StartChat();
+
+	// Called when we want to start a team chat
+	void StartTeamChat();
 
 	// Is this player currently inputing text?
 	bool bIsChatting;

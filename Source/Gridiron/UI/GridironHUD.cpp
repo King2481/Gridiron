@@ -81,11 +81,11 @@ void AGridironHUD::CreateChatBoxWidget()
 	}
 }
 
-void AGridironHUD::StartChatInput()
+void AGridironHUD::StartChatInput(const bool bForTeam /* = false */)
 {
 	if (ChatBoxWidget)
 	{
-		ChatBoxWidget->StartChatInput();
+		ChatBoxWidget->StartChatInput(bForTeam);
 	}
 }
 

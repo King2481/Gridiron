@@ -36,7 +36,7 @@ public:
 
 	/* Grabs mouse focus, triggers chat events */
 	UFUNCTION(BlueprintCallable, Category = "Chat")
-	void StartChatInput();
+	void StartChatInput(const bool bForTeam = false);
 
 	/* Releases mouse focus */
 	UFUNCTION(BlueprintCallable, Category = "Chat")
@@ -56,8 +56,13 @@ public:
 
 protected:
 
+	// Are we currently chatting?
 	UPROPERTY(BlueprintReadOnly, Category = "Chat")
 	bool bInChatMode;
+
+	// Is this message a team message?
+	UPROPERTY(BlueprintReadOnly, Category = "Chat")
+	bool bTeamMessage;
 
 	/* Input for chat message */
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))

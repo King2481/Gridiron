@@ -71,6 +71,7 @@ void AGridironPlayerController::SetupInputComponent()
 	Super::SetupInputComponent();
 
 	InputComponent->BindAction("StartChat", IE_Pressed, this, &AGridironPlayerController::StartChat);
+	InputComponent->BindAction("StartTeamChat", IE_Pressed, this, &AGridironPlayerController::StartTeamChat);
 	InputComponent->BindAction("InGameMenu", IE_Pressed, this, &AGridironPlayerController::ToggleInGameMenu);
 
 	InputComponent->BindAction("Scoreboard", IE_Pressed, this, &AGridironPlayerController::ShowScoreboard);
@@ -86,7 +87,16 @@ void AGridironPlayerController::StartChat()
 	}
 }
 
-void AGridironPlayerController::ServerSendChatMessage_Implementation(const FText& Message)
+void AGridironPlayerController::StartTeamChat()
+{
+	const auto GridironHUD = Cast<AGridironHUD>(GetHUD());
+	if (GridironHUD)
+	{
+		GridironHUD->StartChatInput(true);
+	}
+}
+
+void AGridironPlayerController::ServerSendChatMessage_Implementation(const FText& Message, const bool bTeamMessage)
 {
 	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
 	{
@@ -96,11 +106,16 @@ void AGridironPlayerController::ServerSendChatMessage_Implementation(const FText
 			continue;
 		}
 
-		PC->ClientTeamMessage(PlayerState, Message.ToString(), false ? TEXT("Host") : TEXT("Client"));
+		if (bTeamMessage && PC->GetTeamId() != GetTeamId())
+		{
+			continue;
+		}
+
+		PC->ClientTeamMessage(PlayerState, Message.ToString(), bTeamMessage ? TEXT("Team") : TEXT(""));
 	}
 }
 
-bool AGridironPlayerController::ServerSendChatMessage_Validate(const FText& Message)
+bool AGridironPlayerController::ServerSendChatMessage_Validate(const FText& Message, const bool bTeamMessage)
 {
 	return true;
 }
@@ -113,10 +128,11 @@ void AGridironPlayerController::ClientTeamMessage_Implementation(APlayerState* S
 
 	const bool bGamemodeSay = Type == FName(TEXT("Gamemode"));
 	const bool bHostSay = Type == FName(TEXT("Host"));
+	const bool bTeamSay = Type == FName(TEXT("Team"));
 
 	static FFormatNamedArguments Arguments;
 	Arguments.Add(TEXT("Name"), FText::FromString(SenderPlayerState ? SenderPlayerState->GetPlayerName() : TEXT("")));
-	Arguments.Add(TEXT("Title"), FText::FromString(bHostSay ? TEXT("(Host)") : TEXT("")));
+	Arguments.Add(TEXT("Title"), FText::FromString(bTeamSay ? TEXT("(Team)") : TEXT("(All)")));
 	Arguments.Add(TEXT("Message"), FText::FromString(S));
 
 	OnChatMessageReceived(FText::Format(NSLOCTEXT("HUD", "ChatMessageFormat", "{Name} {Title}: {Message}"), Arguments), SenderPlayerState);

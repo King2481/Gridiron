@@ -29,7 +29,7 @@ public:
 	virtual void OnChatMessageReceived(const FText& Message, AGridironPlayerState* SenderPlayerState);
 
 	// Begins chat input
-	void StartChatInput();
+	void StartChatInput(const bool bForTeam = false);
 
 protected:
 

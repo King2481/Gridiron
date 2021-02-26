@@ -12,10 +12,11 @@ UChatBox::UChatBox(const FObjectInitializer& ObjectInitializer)
 	MaxChatLines = 9;
 	bIsBodyDirty = false;
 	bInChatMode = false;
+	bTeamMessage = false;
 	LastChatMessageSentTime = -1.f;
 }
 
-void UChatBox::StartChatInput()
+void UChatBox::StartChatInput(const bool bForTeam)
 {
 	const auto OwningPlayer = Cast<AGridironPlayerController>(GetOwningPlayer());
 	if (!OwningPlayer)
@@ -24,6 +25,7 @@ void UChatBox::StartChatInput()
 	}
 
 	bInChatMode = true;
+	bTeamMessage = bForTeam;
 	OnChatInputStarted();
 
 	// Grab focus
@@ -87,7 +89,7 @@ void UChatBox::SendChatMessage(const FText& Message)
 
 	LastChatMessageSentTime = GetWorld() ? GetWorld()->TimeSeconds : -1.f;
 
-	PlayerOwner->ServerSendChatMessage(Message);
+	PlayerOwner->ServerSendChatMessage(Message, bTeamMessage);
 }
 
 void UChatBox::OnChatMessageRecieved_Implementation(const FText& Message)
