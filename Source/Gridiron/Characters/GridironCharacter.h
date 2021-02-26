@@ -336,11 +336,11 @@ protected:
 	uint8 CurrentDashStocks;
 
 	// How many dash stocks is this character allowed to have?
-	UPROPERTY(BlueprintReadOnly, Category = "Character")
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Character")
 	uint8 MaxDashStocks;
 
 	// How long does it take to fully restore your dash stocks?
-	UPROPERTY(BlueprintReadOnly, Category = "Character")
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Character")
 	float DashStockRestoreTime;
 
 	// Timer handle for restoring.
@@ -352,9 +352,12 @@ protected:
 	// Are we pending a dash stock restore?
 	bool bPendingDashStockRestore;
 
-	// What sound is used when the character dashes? (player only)
+	// Called when we want to restore the dash stocks.
+	void RestoreDashStocks();
+
+	// What sound is used when the character dash stock is restored? (player only)
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Sounds")
-	USoundBase* DashSound;
+	USoundBase* DashRestoreSound;
 
 	void UpdateBodyColor();
 

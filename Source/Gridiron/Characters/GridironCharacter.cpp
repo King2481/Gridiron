@@ -50,7 +50,7 @@ AGridironCharacter::AGridironCharacter(const FObjectInitializer& ObjectInitializ
 	bPendingDashStockRestore = false;
 	TeamId = ITeamInterface::InvalidId;
 
-	DashSound = nullptr;
+	DashRestoreSound = nullptr;
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	CameraComponent->SetupAttachment(RootComponent);
@@ -157,7 +157,7 @@ void AGridironCharacter::Landed(const FHitResult& Hit)
 	if (bPendingDashStockRestore)
 	{
 		bPendingDashStockRestore = false;
-		CurrentDashStocks = MaxDashStocks;
+		RestoreDashStocks();
 	}
 }
 
@@ -702,12 +702,6 @@ void AGridironCharacter::StartDash()
 	{
 		GridironMovement->StartDash();
 	}
-
-	const auto PC = Cast<AGridironPlayerController>(Controller);
-	if (PC && PC->IsLocalController())
-	{
-		PC->ClientPlaySound(DashSound);
-	}
 }
 
 void AGridironCharacter::EndDash()
@@ -722,7 +716,7 @@ void AGridironCharacter::EndDash()
 
 bool AGridironCharacter::CanDash() const
 {
-	return !bIsDashing && CurrentDashStocks > 0;
+	return !bIsDashing && CurrentDashStocks > 0 && GetVelocity().Size() > 50.f;
 }
 
 bool AGridironCharacter::IsDashing() const
@@ -741,7 +735,21 @@ void AGridironCharacter::OnDashStockRestoreTimerComplete()
 	}
 	else
 	{ 
-		CurrentDashStocks = MaxDashStocks;
+		RestoreDashStocks();
+	}
+}
+
+void AGridironCharacter::RestoreDashStocks()
+{
+	CurrentDashStocks = MaxDashStocks;
+
+	if (DashRestoreSound)
+	{
+		const auto PC = Cast<AGridironPlayerController>(Controller);
+		if (PC && PC->IsLocalController())
+		{
+			PC->ClientPlaySound2D(DashRestoreSound);
+		}
 	}
 }
 
