@@ -5,12 +5,14 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "Gridiron/Teams/TeamInterface.h"
+#include "Gridiron/Game/GameStructTypes.h"
 #include "GridironPlayerController.generated.h"
 
 class AGridironPlayerState;
 class UUserWidget;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRoundWonDelegate, AGridironPlayerState*, WinningPlayerState, uint8, WinningTeam);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FKillFeedNoticeDelegate, FKillfeedNotice, Notice);
 
 /**
  * 
@@ -60,6 +62,15 @@ public:
 	// Delegate for when a round is won.
 	UPROPERTY(BlueprintAssignable)
 	FOnRoundWonDelegate OnRoundWonDelegate;
+
+	// Called to update the killfeed. Unreliable as this is just a cosmetic thing and don't want to take up bandwidth
+	UFUNCTION(Client, Unreliable)
+	void ClientRecieveKillFeedNotice(const FKillfeedNotice& Notice);
+	void ClientRecieveKillFeedNotice_Implementation(const FKillfeedNotice& Notice);
+
+	// Delegate for when a round is won.
+	UPROPERTY(BlueprintAssignable)
+	FKillFeedNoticeDelegate KillFeedNoticeDelegate;
 
 	// Will play a sound only this player will hear
 	UFUNCTION(BlueprintCallable, Client, Reliable, Category = "Player Controller")

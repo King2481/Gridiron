@@ -233,6 +233,11 @@ void AGridironPlayerController::ClientOnRoundWon_Implementation(AGridironPlayerS
 	OnRoundWonDelegate.Broadcast(WinningPlayerState, WinningTeam);
 }
 
+void AGridironPlayerController::ClientRecieveKillFeedNotice_Implementation(const FKillfeedNotice& Notice)
+{
+	KillFeedNoticeDelegate.Broadcast(Notice);
+}
+
 void AGridironPlayerController::ClientPlaySound2D_Implementation(USoundBase* SoundToPlay)
 {
 	if (SoundToPlay)

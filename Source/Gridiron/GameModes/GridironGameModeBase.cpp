@@ -10,6 +10,7 @@
 #include "Gridiron/Teams/TeamInterface.h"
 #include "Gridiron/Teams/TeamInfo.h"
 #include "Gridiron/Teams/TeamDefinition.h"
+#include "Gridiron/Game/GameStructTypes.h"
 
 namespace MatchState
 {
@@ -218,6 +219,25 @@ void AGridironGameModeBase::OnCharacterKilled(AGridironCharacter* Victim, float 
 			else
 			{
 				VictimPC->RespawnPlayer();
+			}
+		}
+	}
+
+	if (bKillFeed)
+	{
+		FKillfeedNotice Notice;
+		Notice.Killer = KillerPS;
+		Notice.Victim = VictimPS;
+		Notice.KilledBy = DamageCauser;
+		Notice.bSuicide = bSelfKill;
+		Notice.DamageType = DamageEvent.DamageTypeClass;
+
+		for (FConstControllerIterator Iterator = GetWorld()->GetControllerIterator(); Iterator; ++Iterator)
+		{
+			const auto Controller = Cast<AGridironPlayerController>(Iterator->Get());
+			if (Controller)
+			{
+				Controller->ClientRecieveKillFeedNotice(Notice);
 			}
 		}
 	}
