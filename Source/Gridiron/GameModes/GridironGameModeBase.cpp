@@ -33,7 +33,7 @@ AGridironGameModeBase::AGridironGameModeBase()
 	SelfDamageMultiplier = 0.25f;
 	WinningPlayerState = nullptr;
 	WinningTeamId = ITeamInterface::InvalidId;
-	RoundTimeLimit = 300; // 5 minutes by default
+	RoundTimeLimit = 5; // 5 minutes by default
 	bKillFeed = true;
 
 	bRespawnPlayerOnDeath = true;
@@ -311,6 +311,7 @@ void AGridironGameModeBase::HandleMatchHasStarted()
 {
 	Super::HandleMatchHasStarted();
 
+	SetRoundTimer(RoundTimeLimit);
 }
 
 void AGridironGameModeBase::HandleRoundWon()
@@ -358,4 +359,24 @@ void AGridironGameModeBase::TeamWin(const uint8 NewWinningTeam)
 	// Winner, inform everyone.
 	WinningTeamId = NewWinningTeam;
 	SetMatchState(MatchState::RoundWon);
+}
+
+void AGridironGameModeBase::Draw()
+{
+	// Match is over, but no winner, assume draw
+	SetMatchState(MatchState::RoundWon);
+}
+
+void AGridironGameModeBase::SetRoundTimer(const int32 Timer)
+{
+	const auto GS = GetWorld()->GetGameState<AGridironGameState>();
+	if (GS)
+	{
+		GS->SetRoundTimer(Timer);
+	}
+}
+
+bool AGridironGameModeBase::OnRoundTimerExpired()
+{
+	return BlueprintOnRoundTimerExpired();
 }

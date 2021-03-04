@@ -101,7 +101,7 @@ public:
 	bool bKillFeed;
 
 	// How long does this game mode last, in seconds?
-	UPROPERTY(Config, BlueprintReadOnly, Category = "Gamemode")
+	UPROPERTY(Config, BlueprintReadOnly, EditDefaultsOnly, Category = "Gamemode")
 	int32 RoundTimeLimit;
 
 	// This sole winner of this gamemode.
@@ -112,6 +112,13 @@ public:
 
 	FTimerHandle GameOverTimerHandle;
 
+	// In seconds, what will be the round time?
+	UFUNCTION(BlueprintCallable, Category = "Gamemode")
+	void SetRoundTimer(const int32 Seconds);
+
+	// What happens when the round timer is expired?
+	virtual bool OnRoundTimerExpired();
+
 protected:
 
 	// Blueprint event for a character death
@@ -121,6 +128,10 @@ protected:
 	// Called when the Gamemode has reached a the winning condition and there is a solo player that has won.
 	UFUNCTION(BlueprintCallable, Category = "Gamemode")
 	void PlayerStateWin(AGridironPlayerState* NewWinningPlayerState);
+
+	// Called when we need to end a match but there is no winner.
+	UFUNCTION(BlueprintCallable, Category = "Gamemode")
+	void Draw();
 
 	// Called when the Gamemode has reached a the winning condition and there is team that has won.
 	UFUNCTION(BlueprintCallable, Category = "Gamemode")
@@ -139,4 +150,7 @@ protected:
 	// What teams are in this mode?
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gamemode")
 	TArray<TSoftObjectPtr<UTeamDefinition>> TeamsForMode;
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Gamemode")
+	bool BlueprintOnRoundTimerExpired();
 };

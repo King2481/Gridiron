@@ -46,9 +46,29 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnPlayerAmmountChangedDelegate OnPlayerAmmountChangedDelegate;
 
+	// Sets the round timer for the game state so clients know how much round time is left
+	void SetRoundTimer(const int32 Seconds);
+
+	// Returns, in seconds, how much round time is remaining
+	UFUNCTION(BlueprintPure, Category = "Game State")
+	float GetRoundTimeRemaining() const;
+
 protected:
 
 	// What teams have been created and are currently in play?
 	UPROPERTY(BlueprintReadOnly, Replicated, Category = "Game State")
 	TArray<ATeamInfo*> Teams;
+
+	// At what time will the round in (in world seconds)
+	UPROPERTY(BlueprintReadOnly, Replicated, Category = "Game State")
+	float RoundEndTime;
+
+	// Has the round timer expired and no longer needs to tick?
+	bool bRoundTimerExpired;
+
+	// Ticks the round timer
+	void TickTimer();
+
+	FTimerHandle RoundTimeTimerHandle;
+
 };
