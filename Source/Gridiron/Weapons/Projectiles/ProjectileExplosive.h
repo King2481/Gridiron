@@ -87,6 +87,7 @@ public:
 protected:
 
 	// Explodes the projectile.
+	UFUNCTION(BlueprintCallable, Category = "Projectile Explosive")
 	void Explode();
 
 	// Explodes at a specfic location
