@@ -415,7 +415,7 @@ void AGridironCharacter::AddItemToInventory(TSubclassOf<AItemBase> ItemToAdd, co
 				FFormatNamedArguments Arguments;
 				Arguments.Add(TEXT("ItemName"), Item->ItemName);
 
-				PC->ClientTeamMessage(nullptr, FText::Format(TextFormat, Arguments).ToString(), "");
+				PC->ClientTeamMessage(nullptr, FText::Format(TextFormat, Arguments).ToString(), "Gamemode");
 			}
 		}
 	}

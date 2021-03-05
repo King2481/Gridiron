@@ -132,10 +132,19 @@ void AGridironPlayerController::ClientTeamMessage_Implementation(APlayerState* S
 
 	static FFormatNamedArguments Arguments;
 	Arguments.Add(TEXT("Name"), FText::FromString(SenderPlayerState ? SenderPlayerState->GetPlayerName() : TEXT("")));
-	Arguments.Add(TEXT("Title"), FText::FromString(bTeamSay ? TEXT("(Team)") : TEXT("(All)")));
+
+	if (bGamemodeSay)
+	{
+		Arguments.Add(TEXT("Title"), FText::FromString(TEXT("")));
+	}
+	else
+	{
+		Arguments.Add(TEXT("Title"), FText::FromString(bTeamSay ? TEXT("(Team):") : TEXT("(All):")));
+	}
+	
 	Arguments.Add(TEXT("Message"), FText::FromString(S));
 
-	OnChatMessageReceived(FText::Format(NSLOCTEXT("HUD", "ChatMessageFormat", "{Name} {Title}: {Message}"), Arguments), SenderPlayerState);
+	OnChatMessageReceived(FText::Format(NSLOCTEXT("HUD", "ChatMessageFormat", "{Name} {Title} {Message}"), Arguments), SenderPlayerState);
 }
 
 void AGridironPlayerController::OnChatMessageReceived(const FText& Message, AGridironPlayerState* SenderPlayerState /*= nullptr*/)
