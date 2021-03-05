@@ -185,6 +185,9 @@ public:
 	// Sets the Team Id for this character
 	void SetTeamId(const uint8 NewTeamId);
 
+	// Removes any and all current active gameplay abilities.
+	void RemoveAllActiveAbilities();
+
 protected:
 
 	// What team does this character belong to?

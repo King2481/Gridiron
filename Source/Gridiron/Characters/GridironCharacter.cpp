@@ -247,7 +247,7 @@ float AGridironCharacter::DamageArmor(float DamageAmount, FDamageEvent const& Da
 
 void AGridironCharacter::FellOutOfWorld(const UDamageType& dmgType)
 {
-	Die(Health, FDamageEvent(dmgType.GetClass()), GetController(), nullptr);
+	Die(Health, FDamageEvent(UGridironDamageType::StaticClass()), GetController(), nullptr);
 }
 
 bool AGridironCharacter::ShouldTakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) const
@@ -307,7 +307,7 @@ void AGridironCharacter::OnDeath()
 	TearOff();
 	SetLifeSpan(30.f);
 	DestroyInventoryItems();
-	// TODO: I imagine we'd want to clear any abilities.
+	RemoveAllActiveAbilities();
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
@@ -788,6 +788,22 @@ void AGridironCharacter::UpdateBodyColor()
 	if (DynamicMaterialInst)
 	{
 		DynamicMaterialInst->SetVectorParameterValue(FName("BodyColor"), Team->GetTeamColor());
+	}
+}
+
+void AGridironCharacter::RemoveAllActiveAbilities()
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	for (const FGameplayAbilitySpec& Spec : AbilitySystemComponent->GetActivatableAbilities())
+	{
+		if (Spec.Ability->GetClass())
+		{
+			AbilitySystemComponent->ClearAbility(FGameplayAbilitySpecHandle(Spec.Handle));
+		}
 	}
 }
 
