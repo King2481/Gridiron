@@ -820,9 +820,15 @@ void AGridironCharacter::CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult
 	if (CameraComponent)
 	{
 		const float CurrentFOV = CameraComponent->FieldOfView;
-		const float TargetFOV = FMath::FInterpTo(CurrentFOV, DesiredFOV, DeltaTime, 20.0f);
+		const float TargetFOV = FMath::FInterpTo(CurrentFOV, DesiredFOV, DeltaTime, 20.f);
 
 		CameraComponent->SetFieldOfView(TargetFOV);
+		
+		const FVector RelativeLocation = CameraComponent->GetRelativeLocation();
+		const float TargetEyeHeight = bIsCrouched ? CrouchedEyeHeight : BaseEyeHeight;
+		const float SmoothedEyeHeight = FMath::FInterpTo(RelativeLocation.Z, TargetEyeHeight, DeltaTime, 5.f);
+
+		CameraComponent->SetRelativeLocation(FVector(RelativeLocation.X, RelativeLocation.Y, SmoothedEyeHeight));
 	}
 }
 
