@@ -49,6 +49,7 @@ AGridironCharacter::AGridironCharacter(const FObjectInitializer& ObjectInitializ
 	DashStockRestoreTime = 2.5f;
 	bPendingDashStockRestore = false;
 	TeamId = ITeamInterface::InvalidId;
+	DesiredFOV = 90.f;
 
 	DashRestoreSound = nullptr;
 
@@ -118,6 +119,11 @@ void AGridironCharacter::PostInitializeComponents()
 	if (GridironMovement)
 	{
 		GridironMovement->OwningCharacter = this;
+	}
+
+	if (CameraComponent)
+	{
+		DesiredFOV = CameraComponent->FieldOfView;
 	}
 }
 
@@ -805,6 +811,24 @@ void AGridironCharacter::RemoveAllActiveAbilities()
 			AbilitySystemComponent->ClearAbility(FGameplayAbilitySpecHandle(Spec.Handle));
 		}
 	}
+}
+
+void AGridironCharacter::CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult)
+{
+	Super::CalcCamera(DeltaTime, OutResult);
+
+	if (CameraComponent)
+	{
+		const float CurrentFOV = CameraComponent->FieldOfView;
+		const float TargetFOV = FMath::FInterpTo(CurrentFOV, DesiredFOV, DeltaTime, 20.0f);
+
+		CameraComponent->SetFieldOfView(TargetFOV);
+	}
+}
+
+void AGridironCharacter::SetDesiredFOV(const float NewDesiredFOV)
+{
+	DesiredFOV = NewDesiredFOV;
 }
 
 // Called to bind functionality to input

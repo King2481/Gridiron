@@ -188,6 +188,13 @@ public:
 	// Removes any and all current active gameplay abilities.
 	void RemoveAllActiveAbilities();
 
+	// Sets our desired FOV to zoom to
+	UFUNCTION(BlueprintCallable, Category = "Character")
+	void SetDesiredFOV(const float NewDesiredFOV);
+
+	// Calculates the owners camera.
+	virtual void CalcCamera(float DeltaTime, FMinimalViewInfo& OutResult) override;
+
 protected:
 
 	// What team does this character belong to?
@@ -363,6 +370,10 @@ protected:
 	USoundBase* DashRestoreSound;
 
 	void UpdateBodyColor();
+
+	// What is our desired FOV?
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Character")
+	float DesiredFOV;
 
 public:	
 
