@@ -31,6 +31,7 @@ APickup::APickup()
 	bEnabled = true;
 	DisableTime = 15.f;
 	PickupSound = nullptr;
+	bStartsDisabled = false;
 }
 
 void APickup::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -46,6 +47,14 @@ void APickup::BeginPlay()
 	Super::BeginPlay();
 
 	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &APickup::OnOverlap);
+
+	if (HasAuthority() && bStartsDisabled)
+	{
+		bEnabled = false;
+		HandleVisibility();
+
+		GetWorldTimerManager().SetTimer(DisableTimerHandle, this, &APickup::OnReenabled, DisableTime);
+	}
 }
 
 void APickup::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)

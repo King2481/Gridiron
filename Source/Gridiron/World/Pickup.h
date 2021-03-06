@@ -79,5 +79,8 @@ protected:
 	// Called when this pickup gets reenabled.
 	void OnReenabled();
 
+	// Does this pickup start disabled?
+	UPROPERTY(EditDefaultsOnly, Category = "Pickup")
+	bool bStartsDisabled;
 
 };
