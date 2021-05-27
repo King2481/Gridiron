@@ -161,7 +161,7 @@ void AItemFirearm::FireBullets()
 				const FVector EndTrace = StartTrace + (ShootDir * FirearmConfig.Range);
 
 				const FHitResult Impact = WeaponTrace(StartTrace, EndTrace);
-				StoredHits.Add(FStoredFirearmHit(Impact.GetActor(), Impact.PhysMaterial, StartTrace, Impact.ImpactPoint, Impact.ImpactNormal, ShootDir));
+				StoredHits.Add(FStoredFirearmHit(Impact.Actor, Impact.PhysMaterial, StartTrace, Impact.ImpactPoint, Impact.ImpactNormal, ShootDir));
 			}
 
 			ProcessInstantHits(StoredHits);
@@ -350,10 +350,8 @@ void AItemFirearm::ConfirmedFirearmHit(const FStoredFirearmHit& Hit)
 	// handle damage
 	if (ShouldDealDamage(Hit.HitActor.Get()))
 	{
-		FHitResult Impact = FHitResult(Hit.HitActor.Get(), nullptr, FVector(), FVector());
-		
-		//Impact.Actor = Hit.HitActor; // UE5 Change, in order to set the actor, we must use the constructor. 
-		
+		FHitResult Impact;
+		Impact.Actor = Hit.HitActor;
 		Impact.PhysMaterial = Hit.PhysMaterial;
 		Impact.ImpactPoint = Hit.ImpactPoint;
 		Impact.TraceStart = Hit.Origin;
